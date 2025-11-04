@@ -33,8 +33,7 @@ const { hostname, protocol } = new URL(`${appConfig.BASE_URL}`);
 const nextConfig = {
   reactStrictMode: true,
 
-  // ✅ Tambahkan ini untuk static export
-  output: 'export',
+  // output: 'export',
 
   images: {
     unoptimized: true, // ✅ biar gak error pas export
