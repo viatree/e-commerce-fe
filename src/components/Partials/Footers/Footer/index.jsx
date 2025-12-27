@@ -26,7 +26,17 @@ export default function Footer({ settings }) {
 
       setFooterData({
         footerContent: payload.footer,
-        socialLinks: payload.social_links,
+        // 👇 Override social links jadi hanya TikTok & Instagram
+        socialLinks: [
+          {
+            link: "https://www.tiktok.com/@rorie.cloud?_r=1&_t=ZS-91qyYCSswXU",
+            icon: "fab fa-tiktok",
+          },
+          {
+            link: "https://www.instagram.com/rorie.cloud?igsh=b2tja3prejhlaXIy",
+            icon: "fab fa-instagram",
+          },
+        ],
         firstColumn: payload.footer_first_col,
         secondColumn: payload.footer_second_col,
         thirdColumn: payload.footer_third_col,
@@ -170,7 +180,7 @@ export default function Footer({ settings }) {
                 socialLinks.map((item, i) => (
                   <a key={i} href={item.link} target="_blank" rel="noreferrer">
                     <FontAwesomeCom
-                      className="w-4 h-4 text-qgray"
+                      className="w-8 h-8 text-qgray"
                       icon={item.icon}
                     />
                   </a>
@@ -184,7 +194,7 @@ export default function Footer({ settings }) {
           </div>
 
           {/* Payment Methods */}
-          {footerContent?.payment_image && (
+          {/* {footerContent?.payment_image && (
             <div className="mt-2 lg:mt-0">
               <Link href="#">
                 <Image
@@ -195,7 +205,7 @@ export default function Footer({ settings }) {
                 />
               </Link>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </footer>

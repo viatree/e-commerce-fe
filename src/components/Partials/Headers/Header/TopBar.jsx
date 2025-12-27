@@ -98,34 +98,6 @@ const getCookieDomain = (hostname) => {
 };
 
 /**
- * Contact information display component
- * Shows phone and email with appropriate icons
- * @param {Object} contact - Object containing phone and email properties
- */
-const ContactInfo = ({ contact }) => (
-  <>
-    {/* Phone contact information */}
-    <div className="flex ltr:space-x-2 rtl:space-x-0 items-center rtl:ml-2 ltr:ml-0">
-      <span className="rtl:ml-2 ltr:ml-0">
-        <PhoneIcon />
-      </span>
-      <span className="text-xs text-qblack font-500 leading-none rtl:ml-2 ltr:ml-0">
-        {contact?.phone}
-      </span>
-    </div>
-    {/* Email contact information */}
-    <div className="flex ltr:space-x-2 rtl:space-x-0 items-center">
-      <span className="rtl:ml-2 ltr:ml-0">
-        <EmailIcon />
-      </span>
-      <span className="text-xs text-qblack font-500 leading-none">
-        {contact?.email}
-      </span>
-    </div>
-  </>
-);
-
-/**
  * Currency selector dropdown component
  * Allows users to switch between different currencies
  * @param {Array} allCurrency - Array of available currencies
@@ -333,42 +305,23 @@ export default function TopBar({
     >
       <div className="container-x mx-auto h-full">
         <div className="flex justify-between items-center h-full">
-          {/* Left side - Navigation links */}
-          <div className="topbar-nav">
-            <ul className="flex space-x-6">
-              <li className="rtl:ml-6 ltr:ml-0">
-                <AccountLink auth={auth} />
-              </li>
-              <li>
-                <Link
-                  href="/tracking-order"
-                  className="text-xs leading-6 text-qblack font-500 cursor-pointer"
-                >
-                  {ServeLangItem()?.Track_Order}
-                </Link>
-              </li>
-            </ul>
-          </div>
+          {/* Left side (if you want something later, e.g. contact) */}
+          <div />
 
-          {/* Right side - Contact info and dropdowns (hidden on mobile) */}
-          <div className="topbar-dropdowns lg:block hidden">
-            <div className="flex ltr:space-x-6 rtl:-space-x-0 items-center">
-              {/* Contact information (phone and email) */}
-              <ContactInfo contact={contact} />
-
-              {/* Currency selector dropdown */}
+          {/* Right side - Currency & Language (VISIBLE on mobile & desktop) */}
+          <div className="topbar-dropdowns block">
+            <div className="flex items-center space-x-3 rtl:space-x-reverse">
               <CurrencySelector
                 allCurrency={allCurrency}
                 defaultCurrency={defaultCurrency}
                 handler={handler}
               />
 
-              {/* Language selector dropdown */}
-              <LanguageSelector
+           {/* <LanguageSelector
                 languagesApi={languagesApi}
                 selectedLang={selectedLang}
                 onLanguageChange={handleLanguageChange}
-              />
+              /> */}
             </div>
           </div>
         </div>

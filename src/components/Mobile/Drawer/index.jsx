@@ -155,7 +155,7 @@ export default function Drawer({ className, open, action }) {
                   </li>
                 ))}
             </ul>
-            {isMultivendor && isMultivendor === 1 ? (
+                     {/* {isMultivendor && isMultivendor === 1 ? (
               <div className="block my-5 px-2">
                 <Link href="/become-seller">
                   <div className="text-sm leading-6 text-qblack w-full h-10 flex justify-center items-center bg-qyellow font-medium font-500 cursor-pointer">
@@ -165,7 +165,7 @@ export default function Drawer({ className, open, action }) {
               </div>
             ) : (
               ""
-            )}
+            )} */}
           </div>
         ) : (
           <div className="menu-item mt-5 w-full">

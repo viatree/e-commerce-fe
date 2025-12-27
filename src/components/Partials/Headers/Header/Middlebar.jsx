@@ -10,6 +10,7 @@ import ThinLove from "../../../Helpers/icons/ThinLove";
 import ThinPeople from "../../../Helpers/icons/ThinPeople";
 import SearchBox from "../../../Helpers/SearchBox";
 import ServeLangItem from "../../../Helpers/ServeLangItem";
+import FontAwesomeCom from "../../../Helpers/icons/FontAwesomeCom";
 import auth from "@/utils/auth";
 import appConfig from "@/appConfig";
 import { setWishlistData } from "@/redux/features/whishlist/whishlistSlice";
@@ -100,10 +101,39 @@ export default function Middlebar({ className, settings }) {
               </Link>
             </div>
 
-            {/* Search Box */}
-            <div className="w-[517px] h-[44px]">
-              <SearchBox className="search-com" />
-            </div>
+            {/* {/* Search Box */}
+           <div className="flex items-center space-x-4">
+  {/* Search Box */}
+  <div className="w-[517px] h-[44px]">
+    <SearchBox className="search-com" />
+  </div>
+
+  {/* Social Icons */}
+  <div className="flex items-center space-x-3">
+    <a
+      href="https://www.tiktok.com/@rorie.cloud?_r=1&_t=ZS-91qyYCSswXU"
+      target="_blank"
+      rel="noreferrer"
+    >
+      <FontAwesomeCom
+        className="w-6 h-6 text-qblack hover:text-qgray transition-all duration-200"
+        icon="fab fa-tiktok"
+      />
+    </a>
+
+    <a
+      href="https://www.instagram.com/rorie.cloud?igsh=b2tja3prejhlaXIy"
+      target="_blank"
+      rel="noreferrer"
+    >
+      <FontAwesomeCom
+        className="w-6 h-6 text-qblack hover:text-qgray transition-all duration-200"
+        icon="fab fa-instagram"
+      />
+    </a>
+  </div>
+</div>
+
 
             {/* Right Side Icons & Profile */}
             <div className="flex space-x-6 rtl:space-x-reverse items-center relative">

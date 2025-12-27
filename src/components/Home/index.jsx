@@ -104,7 +104,7 @@ export default function Home({ homepageData }) {
           }
         />
       </ViewMoreTitle>
-      {isMultivendor === 1 && (
+      {/* {isMultivendor === 1 && (
         <ViewMoreTitle
           className="best-sallers-section md:mb-[60px] mb-[30px]"
           seeMoreUrl="/sellers"
@@ -114,7 +114,7 @@ export default function Home({ homepageData }) {
             sallers={homepage?.sellers?.length > 0 ? homepage.sellers : []}
           />
         </ViewMoreTitle>
-      )}
+      )} */}
       <TwoColumnAds
         bannerOne={
           homepage?.twoColumnBannerOne &&

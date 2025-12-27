@@ -962,3 +962,11 @@ font {
     font-size: 10px;
   }
 }
+
+/* globals.css */
+@media (max-width: 768px) {
+  [data-aos] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
