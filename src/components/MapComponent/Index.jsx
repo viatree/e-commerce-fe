@@ -1,7 +1,23 @@
-import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
+// import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
 import { useState, useCallback, useEffect, useRef } from "react";
 import InputCom from "../Helpers/InputCom";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
+import L from "leaflet";
 
+const defaultIcon = new L.Icon({
+  iconUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
 const containerStyle = {
   width: "100%",
   height: "400px",
@@ -17,6 +33,40 @@ export default function MapComponent({
   location,
   locationHandler,
 }) {
+  function FixMapResize() {
+    const map = useMap();
+
+    useEffect(() => {
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
+    }, [map]);
+
+    return null;
+  }
+
+  function MapClickHandler({ onClick }) {
+    useMapEvents({
+      click(e) {
+        onClick(e.latlng);
+      },
+    });
+    return null;
+  }
+
+  function ChangeMapView({ center }) {
+    const map = useMap();
+
+    useEffect(() => {
+      if (!center) return;
+      map.setView(center, map.getZoom(), {
+        animate: true,
+      });
+    }, [center, map]);
+
+    return null;
+  }
+
   // == == == all references
   const inputRef = useRef(null);
   // == == == all state store
@@ -27,10 +77,10 @@ export default function MapComponent({
   const [predictions, setPredictions] = useState([]);
   const [showPredictions, setShowPredictions] = useState(false);
   const [hasUserSelectedLocation, setHasUserSelectedLocation] = useState(false);
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: mapKey, // Use environment variable for API key
-    libraries: libraries,
-  });
+  // const { isLoaded } = useLoadScript({
+  //   googleMapsApiKey: mapKey, // Use environment variable for API key
+  //   libraries: libraries,
+  // });
   // permission
   const getUserLocation = useCallback(() => {
     // Don't get user location if user has manually selected a location
@@ -44,7 +94,7 @@ export default function MapComponent({
           if (location) {
             setMarkerPosition(location);
             setMapCenter(location);
-            getPlaceName(location.lat, location.lng);
+            // getPlaceName(location.lat, location.lng);
           } else {
             const { latitude, longitude } = position.coords;
             setMarkerPosition({ lat: latitude, lng: longitude });
@@ -53,7 +103,7 @@ export default function MapComponent({
               lat: latitude,
               lng: longitude,
             });
-            getPlaceName(latitude, longitude);
+            // getPlaceName(latitude, longitude);
           }
         },
         (error) => {
@@ -111,190 +161,240 @@ export default function MapComponent({
   }, [location, locationHandler, searchInputHandler]);
 
   // Initialize Google Places services - Only when map is enabled
-  useEffect(() => {
-    if (isLoaded && window.google && mapStatus === 1) {
-      // Modern Google Maps API doesn't require service initialization
-      // The AutocompleteSuggestion and Place APIs are available globally
-      console.log("Google Maps API loaded successfully");
-    }
-  }, [isLoaded, mapStatus]);
+  // useEffect(() => {
+  //   if (isLoaded && window.google && mapStatus === 1) {
+  //     // Modern Google Maps API doesn't require service initialization
+  //     // The AutocompleteSuggestion and Place APIs are available globally
+  //     console.log("Google Maps API loaded successfully");
+  //   }
+  // }, [isLoaded, mapStatus]);
 
   // == == == methods
-  const getPlaceName = useCallback(
-    (lat, lng) => {
-      const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-        if (status === "OK" && results[0]) {
-          const placeName = results[0].formatted_address;
-          searchInputHandler(placeName);
-        } else {
-          console.error("Geocoder failed due to: " + status);
-        }
-      });
-    },
-    [searchInputHandler]
-  );
-  const getPlacePredictions = useCallback(async (input) => {
-    if (!input.trim()) {
-      setPredictions([]);
-      setShowPredictions(false);
-      return;
-    }
+  // const getPlaceName = useCallback(
+  //   (lat, lng) => {
+  //     const geocoder = new window.google.maps.Geocoder();
+  //     geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+  //       if (status === "OK" && results[0]) {
+  //         const placeName = results[0].formatted_address;
+  //         searchInputHandler(placeName);
+  //       } else {
+  //         console.error("Geocoder failed due to: " + status);
+  //       }
+  //     });
+  //   },
+  //   [searchInputHandler]
+  // );
+  // const getPlacePredictions = useCallback(async (input) => {
+  //   if (!input.trim()) {
+  //     setPredictions([]);
+  //     setShowPredictions(false);
+  //     return;
+  //   }
 
-    try {
-      // Check if modern API is available
-      if (
-        window.google?.maps?.places?.AutocompleteSuggestion
-          ?.findAutocompletePredictions
-      ) {
-        // Use the modern AutocompleteSuggestion API
-        const suggestions =
-          await window.google.maps.places.AutocompleteSuggestion.findAutocompletePredictions(
-            {
-              input: input,
-              componentRestrictions: { country: [] },
-              types: ["geocode", "establishment"],
-            }
-          );
+  //   try {
+  //     // Check if modern API is available
+  //     if (
+  //       window.google?.maps?.places?.AutocompleteSuggestion
+  //         ?.findAutocompletePredictions
+  //     ) {
+  //       // Use the modern AutocompleteSuggestion API
+  //       const suggestions =
+  //         await window.google.maps.places.AutocompleteSuggestion.findAutocompletePredictions(
+  //           {
+  //             input: input,
+  //             componentRestrictions: { country: [] },
+  //             types: ["geocode", "establishment"],
+  //           }
+  //         );
 
-        if (suggestions && suggestions.length > 0) {
-          setPredictions(suggestions);
-          setShowPredictions(true);
-        } else {
-          setPredictions([]);
-          setShowPredictions(false);
-        }
-      } else {
-        // Fallback to currently available AutocompleteService
-        const autocompleteService =
-          new window.google.maps.places.AutocompleteService();
-        autocompleteService.getPlacePredictions(
-          {
-            input: input,
-            componentRestrictions: { country: [] },
-            types: ["geocode", "establishment"],
-          },
-          (predictions, status) => {
-            if (
-              status === window.google.maps.places.PlacesServiceStatus.OK &&
-              predictions
-            ) {
-              setPredictions(predictions);
-              setShowPredictions(true);
-            } else {
-              setPredictions([]);
-              setShowPredictions(false);
-            }
-          }
-        );
+  //       if (suggestions && suggestions.length > 0) {
+  //         setPredictions(suggestions);
+  //         setShowPredictions(true);
+  //       } else {
+  //         setPredictions([]);
+  //         setShowPredictions(false);
+  //       }
+  //     } else {
+  //       // Fallback to currently available AutocompleteService
+  //       const autocompleteService =
+  //         new window.google.maps.places.AutocompleteService();
+  //       autocompleteService.getPlacePredictions(
+  //         {
+  //           input: input,
+  //           componentRestrictions: { country: [] },
+  //           types: ["geocode", "establishment"],
+  //         },
+  //         (predictions, status) => {
+  //           if (
+  //             status === window.google.maps.places.PlacesServiceStatus.OK &&
+  //             predictions
+  //           ) {
+  //             setPredictions(predictions);
+  //             setShowPredictions(true);
+  //           } else {
+  //             setPredictions([]);
+  //             setShowPredictions(false);
+  //           }
+  //         }
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Error getting place predictions:", error);
+  //     setPredictions([]);
+  //     setShowPredictions(false);
+  //   }
+  // }, []);
+  async function reverseGeocode(lat, lng) {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+    );
+    const data = await res.json();
+    return data.display_name;
+  }
+
+  const getPlacePredictions = useCallback(
+    async (input) => {
+      if (!input.trim()) {
+        setPredictions([]);
+        setShowPredictions(false);
+        return;
       }
-    } catch (error) {
-      console.error("Error getting place predictions:", error);
-      setPredictions([]);
-      setShowPredictions(false);
-    }
-  }, []);
+
+      const res = await fetch(
+        `https://photon.komoot.io/api/?q=${encodeURIComponent(input)}&limit=5`
+      );
+
+      const data = await res.json();
+
+      if (data.features?.length) {
+        setPredictions(data.features);
+        setShowPredictions(true);
+      } else {
+        setPredictions([]);
+        setShowPredictions(false);
+      }
+    },
+    []
+  );
 
   const selectPlace = useCallback(
-    async (placeId) => {
-      try {
-        // Check if modern API is available
-        if (window.google?.maps?.places?.Place?.findByPlaceId) {
-          // Use the modern Place API
-          const place = await window.google.maps.places.Place.findByPlaceId(
-            placeId
-          );
+    (feature) => {
+      const [lng, lat] = feature.geometry.coordinates;
 
-          if (place && place.geometry && place.geometry.location) {
-            const location = place.geometry.location;
-            const lat = location.lat;
-            const lng = location.lng;
+      console.log('Selected place:', lat, lng);
 
-            console.log("Place selected (modern API):", {
-              lat,
-              lng,
-              place: place.formattedAddress,
-            });
+      setMapCenter({ lat, lng });
+      setMarkerPosition({ lat, lng });
+      locationHandler({ lat, lng });
+      setHasUserSelectedLocation(true);
 
-            setMapCenter({ lat, lng });
-            setMarkerPosition({ lat, lng });
-            locationHandler({ lat, lng });
-            setHasUserSelectedLocation(true); // Mark that user has selected a location
-
-            if (mapStatus) {
-              searchInputHandler(place.formattedAddress || place.name);
-            }
-
-            setPredictions([]);
-            setShowPredictions(false);
-          }
-        } else {
-          // Fallback to currently available PlacesService
-          const placesService = new window.google.maps.places.PlacesService(
-            document.createElement("div")
-          );
-
-          placesService.getDetails(
-            {
-              placeId: placeId,
-              fields: ["geometry", "formatted_address", "name"],
-            },
-            (place, status) => {
-              if (
-                status === window.google.maps.places.PlacesServiceStatus.OK &&
-                place
-              ) {
-                const location = place.geometry.location;
-                const lat = location.lat();
-                const lng = location.lng();
-
-                console.log("Place selected (legacy API):", {
-                  lat,
-                  lng,
-                  place: place.formatted_address,
-                });
-
-                setMapCenter({ lat, lng });
-                setMarkerPosition({ lat, lng });
-                locationHandler({ lat, lng });
-                setHasUserSelectedLocation(true); // Mark that user has selected a location
-
-                if (mapStatus) {
-                  searchInputHandler(place.formatted_address || place.name);
-                }
-
-                setPredictions([]);
-                setShowPredictions(false);
-              } else {
-                // Final fallback: use prediction data directly
-                const prediction = predictions.find(
-                  (p) => p.place_id === placeId
-                );
-                if (prediction) {
-                  searchInputHandler(prediction.description);
-                  setPredictions([]);
-                  setShowPredictions(false);
-                }
-              }
-            }
-          );
-        }
-      } catch (error) {
-        console.error("Error getting place details:", error);
-        // Fallback: try to use the prediction data directly
-        const prediction = predictions.find((p) => p.place_id === placeId);
-        if (prediction) {
-          searchInputHandler(prediction.description);
-          setPredictions([]);
-          setShowPredictions(false);
-        }
-      }
+      searchInputHandler(feature.properties.name);
+      setPredictions([]);
+      setShowPredictions(false);
     },
-    [locationHandler, mapStatus, searchInputHandler, predictions]
+    [locationHandler, searchInputHandler]
   );
 
+  // const selectPlace = useCallback(
+  //   async (placeId) => {
+  //     try {
+  //       // Check if modern API is available
+  //       if (window.google?.maps?.places?.Place?.findByPlaceId) {
+  //         // Use the modern Place API
+  //         const place = await window.google.maps.places.Place.findByPlaceId(
+  //           placeId
+  //         );
+
+  //         if (place && place.geometry && place.geometry.location) {
+  //           const location = place.geometry.location;
+  //           const lat = location.lat;
+  //           const lng = location.lng;
+
+  //           console.log("Place selected (modern API):", {
+  //             lat,
+  //             lng,
+  //             place: place.formattedAddress,
+  //           });
+
+  //           setMapCenter({ lat, lng });
+  //           setMarkerPosition({ lat, lng });
+  //           locationHandler({ lat, lng });
+  //           setHasUserSelectedLocation(true); // Mark that user has selected a location
+
+  //           if (mapStatus) {
+  //             searchInputHandler(place.formattedAddress || place.name);
+  //           }
+
+  //           setPredictions([]);
+  //           setShowPredictions(false);
+  //         }
+  //       } else {
+  //         // Fallback to currently available PlacesService
+  //         const placesService = new window.google.maps.places.PlacesService(
+  //           document.createElement("div")
+  //         );
+
+  //         placesService.getDetails(
+  //           {
+  //             placeId: placeId,
+  //             fields: ["geometry", "formatted_address", "name"],
+  //           },
+  //           (place, status) => {
+  //             if (
+  //               status === window.google.maps.places.PlacesServiceStatus.OK &&
+  //               place
+  //             ) {
+  //               const location = place.geometry.location;
+  //               const lat = location.lat();
+  //               const lng = location.lng();
+
+  //               console.log("Place selected (legacy API):", {
+  //                 lat,
+  //                 lng,
+  //                 place: place.formatted_address,
+  //               });
+
+  //               setMapCenter({ lat, lng });
+  //               setMarkerPosition({ lat, lng });
+  //               locationHandler({ lat, lng });
+  //               setHasUserSelectedLocation(true); // Mark that user has selected a location
+
+  //               if (mapStatus) {
+  //                 searchInputHandler(place.formatted_address || place.name);
+  //               }
+
+  //               setPredictions([]);
+  //               setShowPredictions(false);
+  //             } else {
+  //               // Final fallback: use prediction data directly
+  //               const prediction = predictions.find(
+  //                 (p) => p.place_id === placeId
+  //               );
+  //               if (prediction) {
+  //                 searchInputHandler(prediction.description);
+  //                 setPredictions([]);
+  //                 setShowPredictions(false);
+  //               }
+  //             }
+  //           }
+  //         );
+  //       }
+  //     } catch (error) {
+  //       console.error("Error getting place details:", error);
+  //       // Fallback: try to use the prediction data directly
+  //       const prediction = predictions.find((p) => p.place_id === placeId);
+  //       if (prediction) {
+  //         searchInputHandler(prediction.description);
+  //         setPredictions([]);
+  //         setShowPredictions(false);
+  //       }
+  //     }
+  //   },
+  //   [locationHandler, mapStatus, searchInputHandler, predictions]
+  // );
+
   const onMapClick = useCallback(
-    (e) => {
+    async (e) => {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
       setMarkerPosition({
@@ -306,14 +406,16 @@ export default function MapComponent({
         lng: lng,
       });
       setHasUserSelectedLocation(true); // Mark that user has selected a location
-      getPlaceName(lat, lng);
+      const address = await reverseGeocode(lat, lng);
+      if (address) searchInputHandler(address);
+
     },
-    [locationHandler, getPlaceName]
+    [locationHandler]
   );
 
   // Handler when the marker is dragged to a new location
   const onMarkerDragEnd = useCallback(
-    (e) => {
+    async (e) => {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
       setMarkerPosition({
@@ -325,18 +427,20 @@ export default function MapComponent({
         lng: lng,
       });
       setHasUserSelectedLocation(true); // Mark that user has selected a location
-      getPlaceName(lat, lng);
+      const address = await reverseGeocode(lat, lng);
+      if (address) searchInputHandler(address);
+
     },
-    [locationHandler, getPlaceName]
+    [locationHandler]
   );
 
   // == == == effects
   useEffect(() => {
-    // Get user's location when the component mounts - Only when map is enabled
-    if (isLoaded && mapStatus === 1) {
+    if (mapStatus === 1) {
       getUserLocation();
     }
-  }, [isLoaded, getUserLocation, mapStatus]);
+  }, [getUserLocation, mapStatus]);
+
 
   // Debug effect to monitor map center changes
   useEffect(() => {
@@ -345,7 +449,7 @@ export default function MapComponent({
     }
   }, [mapCenter]);
 
-  if (!isLoaded) return <div>Loading...</div>;
+  // if (!isLoaded) return <div>Loading...</div>;
 
   return (
     <div>
@@ -413,10 +517,10 @@ export default function MapComponent({
                   setShowPredictions(true);
                 }
               }}
-              onBlur={() => {
-                // Delay hiding predictions to allow clicking on them
-                setTimeout(() => setShowPredictions(false), 200);
-              }}
+              // onBlur={() => {
+              //   // Delay hiding predictions to allow clicking on them
+              //   setTimeout(() => setShowPredictions(false), 200);
+              // }}
               label="Address"
               placeholder="Your Address here"
               inputClasses="w-full h-[50px]"
@@ -431,25 +535,24 @@ export default function MapComponent({
 
           {/* Predictions Dropdown */}
           {showPredictions && predictions.length > 0 && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-              {predictions.map((prediction) => (
+            <div
+              className="absolute left-0 right-0 mt-1 bg-white border rounded-md shadow-lg"
+              style={{ zIndex: 99999 }}
+            >
+              {predictions.map((feature, idx) => (
                 <div
-                  key={prediction.place_id}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0"
-                  onClick={() => {
-                    selectPlace(prediction.place_id);
-                    searchInputHandler(prediction.description);
-                  }}
+                  key={idx}
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  onClick={() => selectPlace(feature)}
                 >
-                  <div className="text-sm text-gray-900">
-                    {prediction.structured_formatting?.main_text ||
-                      prediction.description}
+                  <div className="text-sm">
+                    {feature.properties.name}
                   </div>
-                  {prediction.structured_formatting?.secondary_text && (
-                    <div className="text-xs text-gray-500">
-                      {prediction.structured_formatting.secondary_text}
-                    </div>
-                  )}
+                  <div className="text-xs text-gray-500">
+                    {[feature.properties.city, feature.properties.country]
+                      .filter(Boolean)
+                      .join(', ')}
+                  </div>
                 </div>
               ))}
             </div>
@@ -474,22 +577,52 @@ export default function MapComponent({
       )}
 
       {mapStatus === 1 && mapCenter && (
-        <GoogleMap
-          key={`${mapCenter.lat}-${mapCenter.lng}`}
-          mapContainerStyle={containerStyle}
+        <MapContainer
           center={mapCenter}
           zoom={12}
-          onClick={onMapClick} // Set marker on map click
+          style={{ width: "100%", height: "400px" }}
         >
+          <FixMapResize />
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution="© OpenStreetMap contributors"
+          />
+
+          <MapClickHandler
+            onClick={async (latlng) => {
+              console.log("Map clicked:", latlng);
+              const address = await reverseGeocode(
+                latlng.lat,
+                latlng.lng
+              );
+              if (address) searchInputHandler(address);
+              console.log('Address:', address);
+              setMarkerPosition(latlng);
+              locationHandler(latlng);
+              setHasUserSelectedLocation(true);
+            }}
+          />
+
           {markerPosition && (
-            <MarkerF
+            <Marker
               position={markerPosition}
-              draggable={true} // Make the marker draggable
-              onDragEnd={onMarkerDragEnd}
+              draggable
+              icon={defaultIcon}
+              eventHandlers={{
+                dragend: async (e) => {
+                  const { lat, lng } = e.target.getLatLng();
+                  setMarkerPosition({ lat, lng });
+                  locationHandler({ lat, lng });
+                  setHasUserSelectedLocation(true);
+                  const address = await reverseGeocode(lat, lng);
+                  if (address) searchInputHandler(address);
+                },
+              }}
             />
           )}
-          {/* Add more markers or functionality as needed */}
-        </GoogleMap>
+
+          <ChangeMapView center={mapCenter} />
+        </MapContainer>
       )}
     </div>
   );

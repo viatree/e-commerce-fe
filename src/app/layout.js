@@ -6,6 +6,7 @@ import NextSnakeLoader from "@/components/Helpers/Loaders/NextSnakeLoader";
 // external css
 import "@/assets/css/loader.css";
 import "@/assets/css/selecbox.css";
+import "leaflet/dist/leaflet.css";
 import { Providers } from "@/redux/providers";
 import Toaster from "@/components/Helpers/Toaster";
 import settings from "@/utils/settings";
