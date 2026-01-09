@@ -32,6 +32,7 @@ export default function MapComponent({
   mapStatus,
   location,
   locationHandler,
+
 }) {
   function FixMapResize() {
     const map = useMap();
@@ -521,8 +522,8 @@ export default function MapComponent({
               //   // Delay hiding predictions to allow clicking on them
               //   setTimeout(() => setShowPredictions(false), 200);
               // }}
-              label="Address"
-              placeholder="Your Address here"
+              label="Location"
+              placeholder="Your Location here"
               inputClasses="w-full h-[50px]"
               error={searchInputError}
             />
@@ -563,8 +564,8 @@ export default function MapComponent({
           <InputCom
             value={searchInputValue}
             inputHandler={(e) => searchInputHandler(e.target.value)}
-            label="Address"
-            placeholder="Your Address here"
+            label="Location"
+            placeholder="Your Location here"
             inputClasses="w-full h-[50px]"
             error={searchInputError}
           />

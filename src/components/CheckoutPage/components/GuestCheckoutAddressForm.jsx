@@ -37,6 +37,9 @@ function GuestCheckoutAddressForm({
   guestLocation,
   setGuestLocation,
   errors,
+  fullAddress,
+setFullAddress,
+
   // this method works for shipping rule
   shippingHandler,
 }) {
@@ -321,6 +324,24 @@ function GuestCheckoutAddressForm({
             )}
           </div>
         </div>
+        <div className="mb-6">
+  <InputCom
+    label={ServeLangItem()?.Full_Address || "Full Address *"}
+    placeholder="Street, building, block, floor, etc"
+    inputClasses="w-full h-[50px]"
+    value={fullAddress}
+    inputHandler={(e) => setFullAddress(e.target.value)}
+    error={!!(errors && Object.hasOwn(errors, "full_address"))}
+  />
+  {errors && Object.hasOwn(errors, "full_address") ? (
+    <span className="text-sm mt-1 text-qred">
+      {errors.full_address[0]}
+    </span>
+  ) : (
+    ""
+  )}
+</div>
+
         <div className=" mb-6">
           <div>
             <MapComponent
@@ -336,6 +357,7 @@ function GuestCheckoutAddressForm({
               searchInputValue={address}
             />
           </div>
+          
         </div>
         <div className="flex space-x-5 items-center ">
           <div className="flex space-x-2 items-center mb-10">
