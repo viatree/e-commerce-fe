@@ -74,6 +74,8 @@ export default function CheckoutPage() {
     selectedBilling,
     setBilling,
 
+    
+
     // Guest fields state
     fName,
     setFName,
@@ -99,6 +101,8 @@ export default function CheckoutPage() {
     setGuestLocation,
     errors,
     setErrors,
+     fullAddress,
+setFullAddress,
 
     // Shipping state
     shippingRules,

@@ -56,6 +56,8 @@ setFullAddress,
     useLazyGetStateListApiQuery();
   const [getCityListApi, { isLoading: isGetCityLoading }] =
     useLazyGetCityListApiQuery();
+const [shippingType, setShippingType] = useState("regular");
+// value: regular | instant | cargo
 
   /**
    * Fetch country list on component mount

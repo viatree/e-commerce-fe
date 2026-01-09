@@ -30,6 +30,7 @@ const CheckoutAddressForm = ({ onAddressSaved, onCancel }) => {
     email: "",
     phone: "",
     address: "",
+    fullAddress: "",
     home: true,
     office: false,
     country: null,
@@ -110,6 +111,7 @@ const CheckoutAddressForm = ({ onAddressSaved, onCancel }) => {
       country: null,
       state: null,
       city: null,
+      fullAddress: "",
     });
     setStateDropdown(null);
     setCityDropdown(null);
@@ -127,6 +129,7 @@ const CheckoutAddressForm = ({ onAddressSaved, onCancel }) => {
       email: formData.email,
       phone: formData.phone,
       address: formData.address,
+      fullAddress: formData.fullAddress,
       type: formData.home ? "home" : formData.office ? "office" : null,
       country: formData.country,
       state: formData.state,
@@ -501,6 +504,24 @@ const CheckoutAddressForm = ({ onAddressSaved, onCancel }) => {
               )}
             </div>
           </div>
+
+          <div className="mb-6">
+  <InputCom
+    label={(ServeLangItem()?.fullAddress || "Full Address") + "*"}
+    placeholder="Street, Building, RT/RW"
+    inputClasses="w-full h-[50px]"
+    value={formData.fullAddress}
+    inputHandler={(e) =>
+      handleInputChange("fullAddress", e.target.value)
+    }
+    error={hasError("fullAddress")}
+  />
+  {hasError("fullAddress") && (
+    <span className="text-sm mt-1 text-qred">
+      {getErrorMessage("fullAddress")}
+    </span>
+  )}
+</div>
 
           {/* Map Component for Location Selection */}
           <div className="mb-6">
