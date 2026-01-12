@@ -47,7 +47,7 @@ const CheckoutAddressForm = ({ onAddressSaved, onCancel }) => {
   const [stateDropdown, setStateDropdown] = useState(null);
   const [cityDropdown, setCityDropdown] = useState(null);
   const [destinationDropdown, setDestinationDropdown] = useState([]);
-const [selectedZip, setSelectedZip] = useState(null);
+  const [selectedZip, setSelectedZip] = useState(null);
 
   // UI states
   const [errors, setErrors] = useState(null);
@@ -220,9 +220,13 @@ const selectCity = async (value) => {
   setSelectedZip(null);
 
   // call API shipping-destinations
-  const res = await getShippingDestinations(value.id);
+  const res = await getShippingDestinations({
+    cityId: Number(value.id),
+    token: auth()?.access_token,
+  });
   if (res?.data) {
-    setDestinationDropdown(res.data);
+    setDestinationDropdown(res.data); 
+    // expected: [{ kelurahan, zip_code }]
   }
 };
 
