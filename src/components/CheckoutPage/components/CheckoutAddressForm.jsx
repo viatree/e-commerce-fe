@@ -15,6 +15,10 @@ import {
   useAddNewAddressMutation,
 } from "@/redux/features/locations/apiSlice";
 import ArrowDownIcoCheck from "@/components/Helpers/icons/ArrowDownIcoCheck";
+import {
+  useLazyGetShippingDestinationsQuery,
+  useLazyCekOngkirQuery,
+} from "@/redux/features/shipping/apiSlice";
 
 const MapComponent = dynamic(() => import("@/components/MapComponent/Index"), {
   ssr: false,
@@ -57,6 +61,10 @@ const [selectedZip, setSelectedZip] = useState(null);
     useLazyGetCityListApiQuery();
   const [addNewAddressQuery, { isLoading: isAddNewAddressLoading }] =
     useAddNewAddressMutation();
+
+    const [getShippingDestinations] =
+  useLazyGetShippingDestinationsQuery();
+const [cekOngkir] = useLazyCekOngkirQuery();
 
   /**
    * Fetch country list on component mount
@@ -198,17 +206,41 @@ const [selectedZip, setSelectedZip] = useState(null);
    * Handler for city selection
    * @param {Object} value - Selected city object with id
    */
-  const selectCity = (value) => {
-    if (value) {
-      if (value?.id) {
-        setFormData((prev) => ({ ...prev, city: value.id }));
-      } else {
-        console.error(
-          `Argument is not valid. Argument should be object with id Ex: "{ id: 1 }"`
-        );
-      }
-    }
-  };
+const selectCity = async (value) => {
+  if (!value?.id) return;
+
+  // simpan city ke formData
+  setFormData((prev) => ({
+    ...prev,
+    city: value.id,
+  }));
+
+  // reset ZIP sebelumnya
+  setDestinationDropdown([]);
+  setSelectedZip(null);
+
+  // call API shipping-destinations
+  const res = await getShippingDestinations(value.id);
+  if (res?.data) {
+    setDestinationDropdown(res.data);
+  }
+};
+
+const handleSelectZip = async (value) => {
+  if (!value?.zip_code) return;
+
+  setSelectedZip(value.zip_code);
+
+  const res = await cekOngkir(value.zip_code);
+
+  if (res?.data) {
+    console.log("ONGKIR:", res.data);
+
+    // kalau mau simpan ongkir:
+    // setShippingPrice(res.data.price)
+  }
+};
+
 
   /**
    * Add new address functionality
@@ -506,6 +538,34 @@ const [selectedZip, setSelectedZip] = useState(null);
               )}
             </div>
           </div>
+          
+{destinationDropdown.length > 0 && (
+  <div className="mb-6">
+    <h1 className="input-label mb-2">
+      Kelurahan / Kode Pos *
+    </h1>
+
+    <div className="w-full h-[50px] border flex items-center">
+      <Selectbox
+        action={handleSelectZip}
+        className="w-full px-5"
+        defaultValue="Pilih Kelurahan"
+        datas={destinationDropdown}
+      >
+        {({ item }) => (
+          <div className="flex justify-between w-full">
+            <span className="text-[13px] text-qblack">
+              {item.kelurahan}
+            </span>
+            <span className="text-[12px] text-qgray">
+              {item.zip_code}
+            </span>
+          </div>
+        )}
+      </Selectbox>
+    </div>
+  </div>
+)}
 
           <div className="mb-6">
   <InputCom
