@@ -12,6 +12,11 @@ import {
 } from "@/redux/features/locations/apiSlice";
 import auth from "@/utils/auth";
 import settings from "@/utils/settings";
+import {
+  useLazyGetShippingDestinationsQuery,
+  useLazyCekOngkirQuery,
+} from "@/redux/features/shipping/apiSlice";
+
 
 function GuestCheckoutAddressForm({
   fName,
@@ -58,6 +63,10 @@ setFullAddress,
     useLazyGetCityListApiQuery();
 const [shippingType, setShippingType] = useState("regular");
 // value: regular | instant | cargo
+const [getShippingDestinations] =
+  useLazyGetShippingDestinationsQuery();
+const [cekOngkir] = useLazyCekOngkirQuery();
+
 
   /**
    * Fetch country list on component mount
@@ -128,18 +137,32 @@ const [shippingType, setShippingType] = useState("regular");
    * Handler for city selection
    * @param {Object} value - Selected city object with id
    */
-  const selectCity = (value) => {
-    if (value) {
-      if (value?.id) {
-        setCity(value.id);
-        shippingHandler(false, value.id);
-      } else {
-        console.error(
-          `Argument is not valid. Argument should be object with id Ex: "{ id: 1 }"`
-        );
-      }
-    }
-  };
+  const selectCity = async (value) => {
+  if (!value?.id) return;
+
+  setCity(value.id);
+  shippingHandler(false, value.id);
+
+  const res = await getShippingDestinations(value.id);
+  if (res?.data) {
+    setDestinationDropdown(res.data); 
+    // expected: [{ kelurahan, zip_code }]
+  }
+};
+const handleSelectZip = async (value) => {
+  if (!value?.zip_code) return;
+
+  setSelectedZip(value.zip_code);
+
+  const res = await cekOngkir(value.zip_code);
+
+  if (res?.data) {
+    // kirim ke parent / update summary ongkir
+    console.log("ONGKIR:", res.data);
+  }
+};
+
+
   return (
     <div className="w-full">
       <div className="form-area">
@@ -327,6 +350,34 @@ const [shippingType, setShippingType] = useState("regular");
           </div>
         </div>
         <div className="mb-6">
+          {destinationDropdown.length > 0 && (
+  <div className="mb-6">
+    <h1 className="input-label mb-2">
+      Kelurahan / Kode Pos *
+    </h1>
+
+    <div className="w-full h-[50px] border flex items-center">
+      <Selectbox
+        action={handleSelectZip}
+        className="w-full px-5"
+        defaultValue="Pilih Kelurahan"
+        datas={destinationDropdown}
+      >
+        {({ item }) => (
+          <div className="flex justify-between w-full">
+            <span className="text-[13px] text-qblack">
+              {item.kelurahan}
+            </span>
+            <span className="text-[12px] text-qgray">
+              {item.zip_code}
+            </span>
+          </div>
+        )}
+      </Selectbox>
+    </div>
+  </div>
+)}
+        
   <InputCom
     label={ServeLangItem()?.Full_Address || "Full Address *"}
     placeholder="Street, building, block, floor, etc"

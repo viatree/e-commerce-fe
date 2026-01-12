@@ -42,6 +42,8 @@ const CheckoutAddressForm = ({ onAddressSaved, onCancel }) => {
   const [countryDropdown, setCountryDropdown] = useState([]);
   const [stateDropdown, setStateDropdown] = useState(null);
   const [cityDropdown, setCityDropdown] = useState(null);
+  const [destinationDropdown, setDestinationDropdown] = useState([]);
+const [selectedZip, setSelectedZip] = useState(null);
 
   // UI states
   const [errors, setErrors] = useState(null);

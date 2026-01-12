@@ -70,8 +70,8 @@ const AddressList = ({
           isSelected
             ? "border-qyellow bg-qyellowlow/10"
             : "border-transparent bg-primarygray"
-        }`}
-      >
+        }`} >
+          
         {/* Address Header */}
         <div className="flex justify-between items-center">
           <p className="title text-[22px] font-semibold">
