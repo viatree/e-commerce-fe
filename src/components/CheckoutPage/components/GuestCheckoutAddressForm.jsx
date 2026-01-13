@@ -14,7 +14,7 @@ import auth from "@/utils/auth";
 import settings from "@/utils/settings";
 import {
   useLazyGetShippingDestinationsQuery,
-  useLazyCekOngkirQuery,
+  useLazyGetShippingCostByZipQuery,
 } from "@/redux/features/shipping/apiSlice";
 
 

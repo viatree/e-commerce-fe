@@ -35,11 +35,13 @@ import { toast } from "react-toastify";
 import usePlaceOrder from "./hooks/usePlaceOrder";
 import CheckoutAddressForm from "./components/CheckoutAddressForm";
 import GuestCheckoutAddressForm from "./components/GuestCheckoutAddressForm";
+import { useLazyCekOngkirQuery } from "@/redux/features/shipping/apiSlice";
 
 export default function CheckoutPage() {
   // Redux selectors
   const { websiteSetup } = useSelector((state) => state.websiteSetup);
   const { cart } = useSelector((state) => state.cart);
+const [cekOngkir] = useLazyCekOngkirQuery();
 
   // Router and dispatch
   const router = useRouter();
@@ -272,6 +274,22 @@ setFullAddress,
       error: deleteAddressErrorHandler,
     });
   };
+
+  const handleCekOngkirByZip = async (zip) => {
+  try {
+    const res = await cekOngkir(zip).unwrap();
+
+    /**
+     * asumsi response:
+     * { cost: 15000 }
+     */
+    setShippingCharge(res.cost);
+  } catch (err) {
+    console.error("Gagal cek ongkir:", err);
+    toast.error("Gagal menghitung ongkir");
+  }
+};
+
 
   /**
    * Place order handler

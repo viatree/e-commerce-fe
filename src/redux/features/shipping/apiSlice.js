@@ -3,16 +3,15 @@ import { apiSlice } from "@/redux/api/apiSlice";
 export const shippingApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getShippingDestinations: builder.query({
-      query: (cityId) =>
-        `/api/shipping-destinations?city_id=${cityId}`,
+      query: (cityId) => `/api/shipping-destinations?city_id=${cityId}`,
     }),
     cekOngkir: builder.query({
-      query: (zip) => `/cek-ongkir/${zip}`,
+      query: (zip) => `/api/cek-ongkir/${zip}`,
     }),
   }),
 });
 
 export const {
-  useLazyGetShippingDestinationsQuery ,
+  useLazyGetShippingDestinationsQuery,
   useLazyCekOngkirQuery,
 } = shippingApi;

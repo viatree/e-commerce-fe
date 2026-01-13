@@ -14,9 +14,12 @@ import {
   useLazyGetCountryListApiQuery,
   useAddNewAddressMutation,
 } from "@/redux/features/locations/apiSlice";
-import { useLazyGetShippingDestinationsQuery  } from "@/redux/features/shipping/apiSlice";
+import {
+  useLazyGetShippingDestinationsQuery,
+  useLazyCekOngkirQuery,
+} from "@/redux/features/shipping/apiSlice";
 import ArrowDownIcoCheck from "@/components/Helpers/icons/ArrowDownIcoCheck";
-
+import { useDispatch } from "react-redux";
 const MapComponent = dynamic(() => import("@/components/MapComponent/Index"), {
   ssr: false,
 });
@@ -24,7 +27,7 @@ const MapComponent = dynamic(() => import("@/components/MapComponent/Index"), {
 const CheckoutAddressForm = ({ onAddressSaved, onCancel }) => {
   // Get website settings for map configuration
   const webSettings = settings();
-
+ const [ongkir, setOngkir] = useState(null); 
   // Form data state - same structure as AddressTab
   const [formData, setFormData] = useState({
     fName: "",
@@ -47,14 +50,15 @@ const [allZipData, setAllZipData] = useState([]);
 
 const [districtDropdown, setDistrictDropdown] = useState([]);
 const [districtId, setDistrictId] = useState(null);
+const dispatch = useDispatch();
 
 const [zipDropdown, setZipDropdown] = useState([]);
 const [selectedZip, setSelectedZip] = useState(null);
 const [selectedDistrict, setSelectedDistrict] = useState(null);
+const [shippingCost, setShippingCost] = useState(null);
 
-// untuk mengambil kecamatan + zip code setelah city dipilih
 const [getShippingDestinations] = useLazyGetShippingDestinationsQuery();
-
+const [cekOngkir] = useLazyCekOngkirQuery();
   // UI states
   const [errors, setErrors] = useState(null);
   const [location, setLocation] = useState(null);
@@ -210,37 +214,43 @@ const [getShippingDestinations] = useLazyGetShippingDestinationsQuery();
 const selectCity = async (value) => {
   if (!value?.id) return;
 
-  const id = Number(value.id);
-
   setFormData(prev => ({
     ...prev,
-    city: id,
-    subdistrict: null,
+    city: value.id,
     zip_code: null,
   }));
 
   try {
-    const res = await getShippingDestinations(id).unwrap();
-    if (res?.data) {
-      setDistrictDropdown(res.data); // 🔥 langsung pakai data API
-      setZipDropdown([]);
-    }
+    const res = await getShippingDestinations(value.id).unwrap();
+    setDistrictDropdown(res.data || []);
   } catch (err) {
-    console.error(err);
+    console.error("Gagal ambil kelurahan:", err);
   }
 };
 
-const selectDistrict = (value) => {
-  if (!value) return;
+
+const selectDistrict = async (value) => {
+  if (!value?.postal_code) return;
 
   setSelectedDistrict(value);
 
   setFormData(prev => ({
     ...prev,
     district: value.name,
-    zip_code: value.postal_code // 🔥 WAJIB
+    zip_code: value.postal_code,
   }));
+
+  try {
+    const res = await cekOngkir(value.postal_code).unwrap();
+    console.log("ONGKIR:", res);
+
+    setShippingCost(res.data); // ✅ SIMPAN ONGKIR
+    setOngkir(res.data);       // ✅ STATE LOKAL
+  } catch (err) {
+    console.error("Gagal cek ongkir:", err);
+  }
 };
+
 
 const selectZipCode = (value) => {
   if (!value?.postal_code) return;
@@ -327,6 +337,7 @@ const selectZipCode = (value) => {
       ? errors[fieldName][0]
       : "";
   };
+  
 
   return (
     <div data-aos="zoom-in" className="w-full">
@@ -535,12 +546,13 @@ const selectZipCode = (value) => {
       Kode Pos*
     </h1>
     <div className="w-full h-[50px] border flex items-center border-qgray-border bg-gray-50">
-      <InputCom
-        placeholder="-"
-        value={formData.zip_code || ""}
-        readOnly
-        inputClasses="w-full h-full bg-transparent"
-      />
+     <InputCom
+  placeholder="-"
+  value={formData.zip_code || ""}
+  readOnly
+  inputHandler={() => {}}
+  inputClasses="w-full h-full bg-transparent"
+/>
     </div>
   </div>
 
