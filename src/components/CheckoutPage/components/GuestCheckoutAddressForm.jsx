@@ -42,9 +42,6 @@ function GuestCheckoutAddressForm({
   guestLocation,
   setGuestLocation,
   errors,
-  fullAddress,
-setFullAddress,
-
   // this method works for shipping rule
   shippingHandler,
 }) {
@@ -54,7 +51,6 @@ setFullAddress,
   const [countryDropdown, setCountryDropdown] = useState([]);
   const [stateDropdown, setStateDropdown] = useState(null);
   const [cityDropdown, setCityDropdown] = useState(null);
-  const [destinationDropdown, setDestinationDropdown] = useState([]);
 
   // Initialization location hooks REDUX RTK QUERY
   const [getCountryListGuestApi] = useLazyGetCountryListGuestApiQuery();
@@ -62,12 +58,12 @@ setFullAddress,
     useLazyGetStateListApiQuery();
   const [getCityListApi, { isLoading: isGetCityLoading }] =
     useLazyGetCityListApiQuery();
-  const [shippingType, setShippingType] = useState("regular");
-  // value: regular | instant | cargo
-  const [getShippingDestinations] =
-    useLazyGetShippingDestinationsQuery();
-  const [cekOngkir] = useLazyCekOngkirQuery();
 
+    const [destinationDropdown, setDestinationDropdown] = useState([]);
+const [selectedZip, setSelectedZip] = useState(null);
+const [getShippingDestinations] =
+  useLazyGetShippingDestinationsQuery();
+const [cekOngkir] = useLazyCekOngkirQuery();
 
   /**
    * Fetch country list on component mount
@@ -138,22 +134,18 @@ setFullAddress,
    * Handler for city selection
    * @param {Object} value - Selected city object with id
    */
-  const selectCity = async (value) => {
-    if (!value?.id) return;
+const selectCity = async (value) => {
+  if (!value?.id) return;
 
-    setCity(value.id);
-    shippingHandler(false, value.id);
+  setCity(value.id);
+  shippingHandler(false, value.id);
 
-    const res = await getShippingDestinations({
-      cityId: Number(value.id),
-      token: auth()?.access_token,
-    });
-    if (res?.data) {
-      setDestinationDropdown(res.data); 
-      // expected: [{ kelurahan, zip_code }]
-    }
-  };
-  
+  const res = await getShippingDestinations(value.id);
+  if (res?.data) {
+    setDestinationDropdown(res.data); 
+    // expected: [{ kelurahan, zip_code }]
+  }
+};
 const handleSelectZip = async (value) => {
   if (!value?.zip_code) return;
 
@@ -166,7 +158,6 @@ const handleSelectZip = async (value) => {
     console.log("ONGKIR:", res.data);
   }
 };
-
 
   return (
     <div className="w-full">
@@ -354,8 +345,7 @@ const handleSelectZip = async (value) => {
             )}
           </div>
         </div>
-        <div className="mb-6">
-          {destinationDropdown.length > 0 && (
+        {destinationDropdown.length > 0 && (
   <div className="mb-6">
     <h1 className="input-label mb-2">
       Kelurahan / Kode Pos *
@@ -382,23 +372,6 @@ const handleSelectZip = async (value) => {
     </div>
   </div>
 )}
-        
-  <InputCom
-    label={ServeLangItem()?.Full_Address || "Full Address *"}
-    placeholder="Street, building, block, floor, etc"
-    inputClasses="w-full h-[50px]"
-    value={fullAddress}
-    inputHandler={(e) => setFullAddress(e.target.value)}
-    error={!!(errors && Object.hasOwn(errors, "full_address"))}
-  />
-  {errors && Object.hasOwn(errors, "full_address") ? (
-    <span className="text-sm mt-1 text-qred">
-      {errors.full_address[0]}
-    </span>
-  ) : (
-    ""
-  )}
-</div>
 
         <div className=" mb-6">
           <div>
@@ -415,7 +388,6 @@ const handleSelectZip = async (value) => {
               searchInputValue={address}
             />
           </div>
-          
         </div>
         <div className="flex space-x-5 items-center ">
           <div className="flex space-x-2 items-center mb-10">

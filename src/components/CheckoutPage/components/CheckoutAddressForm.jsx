@@ -14,11 +14,8 @@ import {
   useLazyGetCountryListApiQuery,
   useAddNewAddressMutation,
 } from "@/redux/features/locations/apiSlice";
+import { useLazyGetShippingDestinationsQuery  } from "@/redux/features/shipping/apiSlice";
 import ArrowDownIcoCheck from "@/components/Helpers/icons/ArrowDownIcoCheck";
-import {
-  useLazyGetShippingDestinationsQuery,
-  useLazyCekOngkirQuery,
-} from "@/redux/features/shipping/apiSlice";
 
 const MapComponent = dynamic(() => import("@/components/MapComponent/Index"), {
   ssr: false,
@@ -34,7 +31,6 @@ const CheckoutAddressForm = ({ onAddressSaved, onCancel }) => {
     email: "",
     phone: "",
     address: "",
-    fullAddress: "",
     home: true,
     office: false,
     country: null,
@@ -46,8 +42,15 @@ const CheckoutAddressForm = ({ onAddressSaved, onCancel }) => {
   const [countryDropdown, setCountryDropdown] = useState([]);
   const [stateDropdown, setStateDropdown] = useState(null);
   const [cityDropdown, setCityDropdown] = useState(null);
-  const [destinationDropdown, setDestinationDropdown] = useState([]);
-  const [selectedZip, setSelectedZip] = useState(null);
+  const [cityId, setCityId] = useState(null);
+
+const [districtDropdown, setDistrictDropdown] = useState([]);
+const [districtId, setDistrictId] = useState(null);
+
+const [zipDropdown, setZipDropdown] = useState([]);
+const [selectedZip, setSelectedZip] = useState(null);
+// untuk mengambil kecamatan + zip code setelah city dipilih
+const [getShippingDestinations] = useLazyGetShippingDestinationsQuery();
 
   // UI states
   const [errors, setErrors] = useState(null);
@@ -61,10 +64,6 @@ const CheckoutAddressForm = ({ onAddressSaved, onCancel }) => {
     useLazyGetCityListApiQuery();
   const [addNewAddressQuery, { isLoading: isAddNewAddressLoading }] =
     useAddNewAddressMutation();
-
-    const [getShippingDestinations] =
-  useLazyGetShippingDestinationsQuery();
-const [cekOngkir] = useLazyCekOngkirQuery();
 
   /**
    * Fetch country list on component mount
@@ -121,7 +120,6 @@ const [cekOngkir] = useLazyCekOngkirQuery();
       country: null,
       state: null,
       city: null,
-      fullAddress: "",
     });
     setStateDropdown(null);
     setCityDropdown(null);
@@ -139,7 +137,6 @@ const [cekOngkir] = useLazyCekOngkirQuery();
       email: formData.email,
       phone: formData.phone,
       address: formData.address,
-      fullAddress: formData.fullAddress,
       type: formData.home ? "home" : formData.office ? "office" : null,
       country: formData.country,
       state: formData.state,
@@ -209,41 +206,53 @@ const [cekOngkir] = useLazyCekOngkirQuery();
 const selectCity = async (value) => {
   if (!value?.id) return;
 
-  // simpan city ke formData
-  setFormData((prev) => ({
-    ...prev,
-    city: value.id,
-  }));
-
-  // reset ZIP sebelumnya
-  setDestinationDropdown([]);
+  const id = Number(value.id);
+  setCityId(id);
+  setDistrictDropdown([]);
+  setZipDropdown([]);
+  setDistrictId(null);
   setSelectedZip(null);
 
-  // call API shipping-destinations
-  const res = await getShippingDestinations({
-    cityId: Number(value.id),
-    token: auth()?.access_token,
-  });
-  if (res?.data) {
-    setDestinationDropdown(res.data); 
-    // expected: [{ kelurahan, zip_code }]
+  setFormData((prev) => ({
+    ...prev,
+    city: id,
+    zip_code: null,
+  }));
+
+  try {
+    const res = await getShippingDestinations(id).unwrap(); // <- trigger RTK Query
+
+    if (res?.data) {
+      // data dari API berisi kecamatan + zip code
+      setDistrictDropdown(res.data);
+    }
+  } catch (err) {
+    console.error("Error fetching districts:", err);
   }
 };
 
-const handleSelectZip = async (value) => {
+
+const selectDistrict = (value) => {
+  if (!value?.id) return;
+
+  setDistrictId(value.id);
+
+  // filter zip berdasarkan kecamatan
+  const zips = districtDropdown.filter(item => item.id === value.id);
+  setZipDropdown(zips);
+};
+
+const selectZipCode = (value) => {
   if (!value?.zip_code) return;
 
   setSelectedZip(value.zip_code);
 
-  const res = await cekOngkir(value.zip_code);
-
-  if (res?.data) {
-    console.log("ONGKIR:", res.data);
-
-    // kalau mau simpan ongkir:
-    // setShippingPrice(res.data.price)
-  }
+  setFormData(prev => ({
+    ...prev,
+    zip_code: value.zip_code
+  }));
 };
+
 
 
   /**
@@ -447,121 +456,96 @@ const handleSelectZip = async (value) => {
             )}
           </div>
 
-          {/* State and City Selection */}
-          <div className="flex rtl:space-x-reverse space-x-5 items-center mb-6">
-            <div className="w-1/2">
-              <h1 className="input-label capitalize block mb-2 text-qgray text-[13px] font-normal">
-                {ServeLangItem()?.State}*
-              </h1>
-              <div
-                className={`w-full h-[50px] border flex justify-between items-center border-qgray-border mb-2 ${
-                  hasError("state") ? "border-qred" : "border-qgray-border"
-                }`}
-              >
-                <Selectbox
-                  action={getcity}
-                  className="w-full px-5"
-                  defaultValue={
-                    stateDropdown &&
-                    stateDropdown.length > 0 &&
-                    (function () {
-                      let item = stateDropdown.find(
-                        (item) => item.id === parseInt(formData.state)
-                      );
-                      return item ? item.name : "Select";
-                    })()
-                  }
-                  datas={stateDropdown && stateDropdown}
-                >
-                  {({ item }) => (
-                    <>
-                      <div className="flex justify-between items-center w-full">
-                        <div>
-                          <span className="text-[13px] text-qblack">
-                            {item}
-                          </span>
-                        </div>
-                        <span>
-                          <ArrowDownIcoCheck />
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </Selectbox>
-              </div>
-              {hasError("state") && (
-                <span className="text-sm mt-1 text-qred">
-                  {getErrorMessage("state")}
-                </span>
-              )}
-            </div>
-            <div className="w-1/2">
-              <h1 className="input-label capitalize block mb-2 text-qgray text-[13px] font-normal">
-                {ServeLangItem()?.City}*
-              </h1>
-              <div
-                className={`w-full h-[50px] border flex justify-between items-center border-qgray-border mb-2 ${
-                  hasError("city") ? "border-qred" : "border-qgray-border"
-                }`}
-              >
-                <Selectbox
-                  action={selectCity}
-                  className="w-full px-5"
-                  defaultValue={
-                    cityDropdown &&
-                    cityDropdown.length > 0 &&
-                    (function () {
-                      let item = cityDropdown.find(
-                        (item) => item.id === parseInt(formData.city)
-                      );
-                      return item ? item.name : "Select";
-                    })()
-                  }
-                  datas={cityDropdown && cityDropdown}
-                >
-                  {({ item }) => (
-                    <>
-                      <div className="flex justify-between items-center w-full">
-                        <div>
-                          <span className="text-[13px] text-qblack">
-                            {item}
-                          </span>
-                        </div>
-                        <span>
-                          <ArrowDownIcoCheck />
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </Selectbox>
-              </div>
-              {hasError("city") && (
-                <span className="text-sm mt-1 text-qred">
-                  {getErrorMessage("city")}
-                </span>
-              )}
-            </div>
-          </div>
-          
-{destinationDropdown.length > 0 && (
-  <div className="mb-6">
-    <h1 className="input-label mb-2">
-      Kelurahan / Kode Pos *
-    </h1>
+      <div className="flex space-x-5 mb-6">
 
+  {/* PROVINSI */}
+  <div className="w-1/2">
+    <h1 className="input-label mb-2">
+      {ServeLangItem()?.State}*
+    </h1>
     <div className="w-full h-[50px] border flex items-center">
       <Selectbox
-        action={handleSelectZip}
+        action={getcity}
         className="w-full px-5"
-        defaultValue="Pilih Kelurahan"
-        datas={destinationDropdown}
+        defaultValue="Select"
+        datas={stateDropdown}
       >
         {({ item }) => (
           <div className="flex justify-between w-full">
-            <span className="text-[13px] text-qblack">
-              {item.kelurahan}
-            </span>
-            <span className="text-[12px] text-qgray">
+            <span>{item}</span>
+            <ArrowDownIcoCheck />
+          </div>
+        )}
+      </Selectbox>
+    </div>
+  </div>
+
+  {/* CITY */}
+  <div className="w-1/2">
+    <h1 className="input-label mb-2">
+      {ServeLangItem()?.City}*
+    </h1>
+    <div className="w-full h-[50px] border flex items-center">
+      <Selectbox
+        action={selectCity}
+        className="w-full px-5"
+        defaultValue="Select"
+        datas={cityDropdown}
+      >
+        {({ item }) => (
+          <div className="flex justify-between w-full">
+            <span>{item}</span>
+            <ArrowDownIcoCheck />
+          </div>
+        )}
+      </Selectbox>
+    </div>
+  </div>
+
+</div>
+
+<div className="flex space-x-5 mb-6">
+
+  {/* KECAMATAN */}
+  <div className="w-1/2">
+    <h1 className="input-label mb-2">
+      Kecamatan*
+    </h1>
+    <div className="w-full h-[50px] border flex items-center">
+      <Selectbox
+        action={selectDistrict}
+        className="w-full px-5"
+        defaultValue="Pilih Kecamatan"
+        datas={districtDropdown}
+        disabled={!districtDropdown.length}
+      >
+        {({ item }) => (
+          <div className="flex justify-between w-full">
+            <span>{item.kecamatan}</span>
+            <ArrowDownIcoCheck />
+          </div>
+        )}
+      </Selectbox>
+    </div>
+  </div>
+
+  {/* ZIP CODE */}
+  <div className="w-1/2">
+    <h1 className="input-label mb-2">
+      Kode Pos*
+    </h1>
+    <div className="w-full h-[50px] border flex items-center">
+      <Selectbox
+        action={selectZipCode}
+        className="w-full px-5"
+        defaultValue="Pilih Kode Pos"
+        datas={zipDropdown}
+        disabled={!zipDropdown.length}
+      >
+        {({ item }) => (
+          <div className="flex justify-between w-full">
+            <span>{item.kelurahan}</span>
+            <span className="text-qgray text-sm">
               {item.zip_code}
             </span>
           </div>
@@ -569,25 +553,9 @@ const handleSelectZip = async (value) => {
       </Selectbox>
     </div>
   </div>
-)}
 
-          <div className="mb-6">
-  <InputCom
-    label={(ServeLangItem()?.fullAddress || "Full Address") + "*"}
-    placeholder="Street, Building, RT/RW"
-    inputClasses="w-full h-[50px]"
-    value={formData.fullAddress}
-    inputHandler={(e) =>
-      handleInputChange("fullAddress", e.target.value)
-    }
-    error={hasError("fullAddress")}
-  />
-  {hasError("fullAddress") && (
-    <span className="text-sm mt-1 text-qred">
-      {getErrorMessage("fullAddress")}
-    </span>
-  )}
 </div>
+
 
           {/* Map Component for Location Selection */}
           <div className="mb-6">
