@@ -84,6 +84,7 @@ const [getShippingDestinations] = useLazyGetShippingDestinationsQuery();
     fetchCountries();
   }, [getCountryListApi]);
 
+
   /**
    * Handles input field changes for form data
    * @param {string} field - The field name to update
@@ -236,11 +237,18 @@ const selectDistrict = (value) => {
   if (!value?.id) return;
 
   setDistrictId(value.id);
+  setFormData(prev => ({
+    ...prev,
+    district: value.id,
+    district_name: value.kecamatan // optional, buat tampil di Selectbox
+  }));
 
   // filter zip berdasarkan kecamatan
   const zips = districtDropdown.filter(item => item.id === value.id);
   setZipDropdown(zips);
+  setSelectedZip(null); // reset zip
 };
+
 
 const selectZipCode = (value) => {
   if (!value?.zip_code) return;
@@ -512,20 +520,21 @@ const selectZipCode = (value) => {
       Kecamatan*
     </h1>
     <div className="w-full h-[50px] border flex items-center">
-      <Selectbox
-        action={selectDistrict}
-        className="w-full px-5"
-        defaultValue="Pilih Kecamatan"
-        datas={districtDropdown}
-        disabled={!districtDropdown.length}
-      >
-        {({ item }) => (
-          <div className="flex justify-between w-full">
-            <span>{item.kecamatan}</span>
-            <ArrowDownIcoCheck />
-          </div>
-        )}
-      </Selectbox>
+  <Selectbox
+  action={selectDistrict}
+  className="w-full px-5"
+  value={districtDropdown.find(d => d.id === districtId)?.kecamatan || ""}
+  datas={districtDropdown}
+  disabled={!districtDropdown.length}
+>
+  {({ item }) => (
+    <div className="flex justify-between w-full">
+      <span>{item.kecamatan}</span>
+      <ArrowDownIcoCheck />
+    </div>
+  )}
+</Selectbox>
+
     </div>
   </div>
 

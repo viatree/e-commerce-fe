@@ -4,7 +4,7 @@ export const shippingApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getShippingDestinations: builder.query({
       query: (cityId) =>
-        `/shipping-destinations?city_id=${cityId}`,
+        `/api/shipping-destinations?city_id=${cityId}`,
     }),
     cekOngkir: builder.query({
       query: (zip) => `/cek-ongkir/${zip}`,
