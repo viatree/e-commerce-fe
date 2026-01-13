@@ -43,12 +43,15 @@ const CheckoutAddressForm = ({ onAddressSaved, onCancel }) => {
   const [stateDropdown, setStateDropdown] = useState(null);
   const [cityDropdown, setCityDropdown] = useState(null);
   const [cityId, setCityId] = useState(null);
+const [allZipData, setAllZipData] = useState([]);
 
 const [districtDropdown, setDistrictDropdown] = useState([]);
 const [districtId, setDistrictId] = useState(null);
 
 const [zipDropdown, setZipDropdown] = useState([]);
 const [selectedZip, setSelectedZip] = useState(null);
+const [selectedDistrict, setSelectedDistrict] = useState(null);
+
 // untuk mengambil kecamatan + zip code setelah city dipilih
 const [getShippingDestinations] = useLazyGetShippingDestinationsQuery();
 
@@ -208,59 +211,48 @@ const selectCity = async (value) => {
   if (!value?.id) return;
 
   const id = Number(value.id);
-  setCityId(id);
-  setDistrictDropdown([]);
-  setZipDropdown([]);
-  setDistrictId(null);
-  setSelectedZip(null);
 
-  setFormData((prev) => ({
+  setFormData(prev => ({
     ...prev,
     city: id,
+    subdistrict: null,
     zip_code: null,
   }));
 
   try {
-    const res = await getShippingDestinations(id).unwrap(); // <- trigger RTK Query
-
+    const res = await getShippingDestinations(id).unwrap();
     if (res?.data) {
-      // data dari API berisi kecamatan + zip code
-      setDistrictDropdown(res.data);
+      setDistrictDropdown(res.data); // 🔥 langsung pakai data API
+      setZipDropdown([]);
     }
   } catch (err) {
-    console.error("Error fetching districts:", err);
+    console.error(err);
   }
 };
 
-
 const selectDistrict = (value) => {
-  if (!value?.id) return;
+  if (!value) return;
 
-  setDistrictId(value.id);
+  setSelectedDistrict(value);
+
   setFormData(prev => ({
     ...prev,
-    district: value.id,
-    district_name: value.kecamatan // optional, buat tampil di Selectbox
+    district: value.name,
+    zip_code: value.postal_code // 🔥 WAJIB
   }));
-
-  // filter zip berdasarkan kecamatan
-  const zips = districtDropdown.filter(item => item.id === value.id);
-  setZipDropdown(zips);
-  setSelectedZip(null); // reset zip
 };
-
 
 const selectZipCode = (value) => {
-  if (!value?.zip_code) return;
+  if (!value?.postal_code) return;
 
-  setSelectedZip(value.zip_code);
+  setSelectedZip(value.postal_code);
 
   setFormData(prev => ({
     ...prev,
-    zip_code: value.zip_code
+    zip_code: value.postal_code,
+    subdistrict: value.name
   }));
 };
-
 
 
   /**
@@ -514,57 +506,45 @@ const selectZipCode = (value) => {
 
 <div className="flex space-x-5 mb-6">
 
-  {/* KECAMATAN */}
+  {/* KELURAHAN */}
   <div className="w-1/2">
     <h1 className="input-label mb-2">
-      Kecamatan*
+      Kelurahan*
     </h1>
-    <div className="w-full h-[50px] border flex items-center">
-  <Selectbox
-  action={selectDistrict}
-  className="w-full px-5"
-  value={districtDropdown.find(d => d.id === districtId)?.kecamatan || ""}
-  datas={districtDropdown}
-  disabled={!districtDropdown.length}
->
-  {({ item }) => (
-    <div className="flex justify-between w-full">
-      <span>{item.kecamatan}</span>
-      <ArrowDownIcoCheck />
-    </div>
-  )}
-</Selectbox>
-
-    </div>
-  </div>
-
-  {/* ZIP CODE */}
-  <div className="w-1/2">
-    <h1 className="input-label mb-2">
-      Kode Pos*
-    </h1>
-    <div className="w-full h-[50px] border flex items-center">
+    <div className="w-full h-[50px] border flex items-center border-qgray-border">
       <Selectbox
-        action={selectZipCode}
+        action={selectDistrict}
         className="w-full px-5"
-        defaultValue="Pilih Kode Pos"
-        datas={zipDropdown}
-        disabled={!zipDropdown.length}
+        datas={districtDropdown}
       >
         {({ item }) => (
           <div className="flex justify-between w-full">
-            <span>{item.kelurahan}</span>
-            <span className="text-qgray text-sm">
-              {item.zip_code}
+            <span>
+              {selectedDistrict?.name ?? "Pilih Kelurahan"}
             </span>
+            <ArrowDownIcoCheck />
           </div>
         )}
       </Selectbox>
     </div>
   </div>
 
-</div>
+  {/* KODE POS */}
+  <div className="w-1/2">
+    <h1 className="input-label mb-2">
+      Kode Pos*
+    </h1>
+    <div className="w-full h-[50px] border flex items-center border-qgray-border bg-gray-50">
+      <InputCom
+        placeholder="-"
+        value={formData.zip_code || ""}
+        readOnly
+        inputClasses="w-full h-full bg-transparent"
+      />
+    </div>
+  </div>
 
+</div>
 
           {/* Map Component for Location Selection */}
           <div className="mb-6">
