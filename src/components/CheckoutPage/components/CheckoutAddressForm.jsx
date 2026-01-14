@@ -56,6 +56,9 @@ const [zipDropdown, setZipDropdown] = useState([]);
 const [selectedZip, setSelectedZip] = useState(null);
 const [selectedDistrict, setSelectedDistrict] = useState(null);
 const [shippingCost, setShippingCost] = useState(null);
+const [shippingOptions, setShippingOptions] = useState([]);
+const [selectedShipping, setSelectedShipping] = useState(null);
+const [showShippingModal, setShowShippingModal] = useState(false);
 
 const [getShippingDestinations] = useLazyGetShippingDestinationsQuery();
 const [cekOngkir] = useLazyCekOngkirQuery();
@@ -242,10 +245,13 @@ const selectDistrict = async (value) => {
 
   try {
     const res = await cekOngkir(value.postal_code).unwrap();
-    console.log("ONGKIR:", res);
 
-    setShippingCost(res.data); // ✅ SIMPAN ONGKIR
-    setOngkir(res.data);       // ✅ STATE LOKAL
+    // ✅ SIMPAN SEMUA OPSI ONGKIR
+    setShippingOptions(res.data || []);
+
+    // buka modal pilihan
+    setShowShippingModal(true);
+
   } catch (err) {
     console.error("Gagal cek ongkir:", err);
   }
@@ -553,8 +559,11 @@ const selectZipCode = (value) => {
   inputHandler={() => {}}
   inputClasses="w-full h-full bg-transparent"
 />
+
     </div>
+    
   </div>
+  
 
 </div>
 
@@ -578,6 +587,43 @@ const selectZipCode = (value) => {
             </div>
           </div>
 
+          {/* ===== OPSI PENGIRIMAN ===== */}
+<div className="mt-4">
+  <button
+    type="button"
+    onClick={() => setShowShippingModal(true)}
+    className="w-full flex justify-between items-center p-3 border rounded-lg text-sm"
+  >
+    <span className="font-medium">
+      Opsi Pengiriman
+    </span>
+    <span className="text-primary">
+      Lihat semua &gt;
+    </span>
+  </button>
+
+  {!selectedShipping && (
+    <p className="text-xs text-red-500 mt-1">
+      Silakan pilih metode pengiriman
+    </p>
+  )}
+  {selectedShipping && (
+  <div className="mt-2 p-3 bg-gray-50 border rounded-lg text-sm">
+    <p className="font-medium">
+      {selectedShipping.name} ({selectedShipping.service})
+    </p>
+    <p className="text-gray-500">
+      Estimasi {selectedShipping.etd || "-"} hari
+    </p>
+    <p className="font-semibold mt-1">
+      Rp{selectedShipping.cost.toLocaleString("id-ID")}
+    </p>
+  </div>
+)}
+
+</div>
+
+<br></br>
           {/* Address Type Selection */}
           <div className="flex rtl:space-x-reverse space-x-5 items-center">
             <div className="flex rtl:space-x-reverse space-x-2 items-center mb-10">
@@ -614,6 +660,7 @@ const selectZipCode = (value) => {
                 {ServeLangItem()?.Office}
               </label>
             </div>
+            
           </div>
 
           {/* Submit Button */}
@@ -621,7 +668,7 @@ const selectZipCode = (value) => {
             onClick={saveAddress}
             type="button"
             className="w-full h-[50px] disabled:cursor-not-allowed"
-            disabled={isAddNewAddressLoading}
+            disabled={isAddNewAddressLoading || !selectedShipping}
           >
             <div className="yellow-btn rounded">
               <span className="text-sm text-qblack">
@@ -636,6 +683,73 @@ const selectZipCode = (value) => {
           </button>
         </form>
       </div>
+      {/* ================= SHIPPING MODAL ================= */}
+{showShippingModal && (
+  <div className="fixed inset-0 bg-black/40 z-[9999] flex items-end">
+    <div className="bg-white w-full rounded-t-xl max-h-[70vh] overflow-y-auto p-4">
+
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">Pilih Pengiriman</h2>
+        <button
+          onClick={() => setShowShippingModal(false)}
+          className="text-xl"
+        >
+          ✕
+        </button>
+      </div>
+
+      {shippingOptions.length === 0 && (
+        <p className="text-center text-gray-500">
+          Ongkir tidak tersedia
+        </p>
+      )}
+
+      {shippingOptions.map((item, index) => (
+        <label
+          key={index}
+          className="flex justify-between items-center py-3 border-b cursor-pointer"
+        >
+          <div className="flex gap-3 items-center">
+            <input
+              type="radio"
+              name="shipping"
+              checked={
+                selectedShipping?.code === item.code &&
+                selectedShipping?.service === item.service
+              }
+              onChange={() => {
+                setSelectedShipping(item);
+                setFormData(prev => ({
+                  ...prev,
+                  shipping_code: item.code,
+                  shipping_service: item.service,
+                  shipping_cost: item.cost,
+                  etd: item.etd,
+                }));
+                setShowShippingModal(false);
+              }}
+            />
+
+            <div>
+              <p className="font-medium">
+                {item.name} ({item.service})
+              </p>
+              <p className="text-sm text-gray-500">
+                {item.description} • {item.etd || "-"} hari
+              </p>
+            </div>
+          </div>
+
+          <div className="font-semibold">
+            Rp{item.cost?.toLocaleString("id-ID")}
+          </div>
+        </label>
+      ))}
+    </div>
+  </div>
+)}
+{/* ================= END SHIPPING MODAL ================= */}
+
     </div>
   );
 };
