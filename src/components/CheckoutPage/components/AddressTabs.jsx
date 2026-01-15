@@ -8,6 +8,7 @@ import CheckoutAddressForm from "./CheckoutAddressForm";
  * Handles switching between billing and shipping address selection
  * Uses the same pattern as AddressTab component for address creation
  */
+
 const AddressTabs = ({
   // Address data
   addresses,
@@ -15,7 +16,7 @@ const AddressTabs = ({
   selectedBilling,
   selectedShipping,
   webSettings,
-
+  setShippingFromApi,
   // Address handlers
   setActiveAddress,
   setBilling,
@@ -39,6 +40,7 @@ const AddressTabs = ({
   /**
    * Handle new address toggle
    */
+  // const [shippingFromApi, setShippingFromApi] = useState(null);
   const handleNewAddressToggle = () => {
     setShowNewAddressForm(!showNewAddressForm);
   };
@@ -119,6 +121,7 @@ const AddressTabs = ({
       {/* New Address Form - Using CheckoutAddressForm component */}
       {showNewAddressForm && (
         <CheckoutAddressForm
+  setShippingFromApi={setShippingFromApi}
           onAddressSaved={handleAddressSaved}
           onCancel={handleCancelNewAddress}
         />

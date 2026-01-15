@@ -12,7 +12,7 @@ const OrderSummary = ({
   totalPrice,
   discountCoupon,
   mainTotalPrice,
-
+    shippingFromApi,
   // Shipping data
   shippingRulesByCityId,
   selectedRule,
@@ -179,58 +179,25 @@ const OrderSummary = ({
       </div>
 
       {/* Shipping Section */}
-      <div className="shipping mb-6 mt-6">
-        <span className="text-[15px] font-medium text-qblack mb-[18px] block">
-          {ServeLangItem()?.Shipping} (+)
-        </span>
+<div className="shipping mb-6 mt-6">
+  <span className="text-[15px] font-medium text-qblack mb-[18px] block">
+    Shipping (+)
+  </span>
 
-        {Number(webSettings?.map_status) !== 1 ? (
-          <div className="flex flex-col space-y-2.5">
-            {shippingRulesByCityId && shippingRulesByCityId.length > 0 ? (
-              shippingRulesByCityId.map((rule, i) =>
-                renderShippingRule(rule, i)
-              )
-            ) : (
-              <div className="flex space-x-2 justify-center items-center text-qblack">
-                <p className="text-sm text-center">Select Shipping Address</p>
-                <span
-                  className="cursor-pointer"
-                  title="Please provide your shipping information or create a shipping address. Without a shipping address, you won't be able to place an order. If you need help, contact the administrator."
-                >
-                  {/* ShippingInfoIco component would go here */}
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </span>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div>
-            {locationShippingPrice && (
-              <div className="flex justify-between items-center">
-                <span className="text-[15px] text-normal text-qgraytwo">
-                  Shipping Price
-                </span>
-                <span
-                  suppressHydrationWarning
-                  className="text-[15px] text-normal text-qgraytwo"
-                >
-                  <CurrencyConvert price={Number(locationShippingPrice)} />
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+  {shippingFromApi ? (
+    <div className="flex justify-between">
+      <span>
+        {shippingFromApi.name} - {shippingFromApi.service} ({shippingFromApi.etd} hari)
+      </span>
+      <span>
+        <CurrencyConvert price={shippingFromApi.cost} />
+      </span>
+    </div>
+  ) : (
+    <p className="text-sm text-gray-400">Please select shipping</p>
+  )}
+</div>
+
 
       {/* Total */}
       <div className="mt-[30px]">

@@ -37,10 +37,11 @@ import CheckoutAddressForm from "./components/CheckoutAddressForm";
 import GuestCheckoutAddressForm from "./components/GuestCheckoutAddressForm";
 
 export default function CheckoutPage() {
+  
   // Redux selectors
   const { websiteSetup } = useSelector((state) => state.websiteSetup);
   const { cart } = useSelector((state) => state.cart);
-
+  
   // Router and dispatch
   const router = useRouter();
   const dispatch = useDispatch();
@@ -136,6 +137,9 @@ export default function CheckoutPage() {
     paymentStatuses,
     setPaymentStatuses,
     updatePaymentStatuses,
+  // 🔥 ONGKIR API
+  shippingFromApi,
+  setShippingFromApi,
   } = useCheckoutState();
 
   // Calculate total price from subtotal
@@ -279,6 +283,7 @@ export default function CheckoutPage() {
     webSettings,
     selectedBilling,
     selectedShipping,
+    shippingFromApi,
     selectedRule,
     couponCode: couponData.couponCode,
     selectPayment,
@@ -423,15 +428,18 @@ export default function CheckoutPage() {
   }, [couponData.couponCode, totalPrice]);
 
   // Calculate main total price when shipping changes
-  useEffect(() => {
-    if (shippingCharge) {
-      setMainTotalPrice(totalPrice + parseInt(shippingCharge));
-    } else if (locationShippingPrice) {
-      setMainTotalPrice(Number(totalPrice) + Number(locationShippingPrice));
-    } else {
-      setMainTotalPrice(totalPrice);
-    }
-  }, [shippingCharge, locationShippingPrice, totalPrice]);
+useEffect(() => {
+  if (shippingFromApi?.cost) {
+    setMainTotalPrice(Number(totalPrice) + Number(shippingFromApi.cost));
+  } else {
+    setMainTotalPrice(totalPrice);
+  }
+}, [shippingFromApi, totalPrice]);
+
+useEffect(() => {
+  console.log("ONGKIR:", shippingFromApi);
+}, [shippingFromApi]);
+
 
   // Initialize shipping when addresses and rules are available
   useEffect(() => {
@@ -617,6 +625,8 @@ export default function CheckoutPage() {
                   {auth() ? (
                     <AddressTabs
                       addresses={addresses}
+                       shippingFromApi={shippingFromApi}
+  setShippingFromApi={setShippingFromApi}
                       activeAddress={activeAddress}
                       selectedBilling={selectedBilling}
                       selectedShipping={selectedShipping}
@@ -628,7 +638,14 @@ export default function CheckoutPage() {
                       onAddressRefresh={handleAddressRefresh}
                     />
                   ) : (
-                    <GuestCheckoutAddressForm {...guestCheckoutAddressProps} />
+                  <GuestCheckoutAddressForm
+  {...guestCheckoutAddressProps}
+    shippingHandler={shippingHandler}
+  shippingFromApi={shippingFromApi}
+  setShippingFromApi={setShippingFromApi}
+  
+/>
+                    
                   )}
                 </div>
 
@@ -653,15 +670,16 @@ export default function CheckoutPage() {
                     totalPrice={totalPrice}
                     discountCoupon={couponData.discountCoupon}
                     mainTotalPrice={mainTotalPrice}
-                    shippingRulesByCityId={shippingRulesByCityId}
-                    selectedRule={selectedRule}
-                    shippingCharge={shippingCharge}
-                    locationShippingPrice={locationShippingPrice}
+                    // shippingRulesByCityId={shippingRulesByCityId}
+                    // selectedRule={selectedRule}
+                    // shippingCharge={shippingCharge}
+                    // locationShippingPrice={locationShippingPrice}
                     webSettings={webSettings}
-                    selectedRuleHandler={selectedRuleHandler}
+                    // selectedRuleHandler={selectedRuleHandler}
                     price={price}
                     totalWeight={totalWeight}
                     totalQty={totalQty}
+                      shippingFromApi={shippingFromApi} 
                   />
 
                   {/* Payment Methods */}

@@ -1,3 +1,4 @@
+"use client";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
@@ -18,6 +19,7 @@ import {
 } from "@/redux/features/order/paymentGetways/apiSlice";
 import guestFormValidation from "../utils/guestFormValidation";
 
+
 export default function usePlaceOrder({
   carts,
   addresses,
@@ -28,6 +30,7 @@ export default function usePlaceOrder({
   couponCode,
   selectPayment,
   transactionInfo,
+   shippingFromApi,
   guestFields = {},
   stripeFields = {},
   setStripeError = () => {},
@@ -133,20 +136,35 @@ export default function usePlaceOrder({
 
   const placeOrderHandler = () => {
     const isGuest = !auth();
-    const basePayload = isGuest
-      ? {
-          address: buildGuestAddressObject(),
-          cart_products: carts,
-          shipping_method_id: parseInt(selectedRule),
-          coupon: couponCode && couponCode.code,
-        }
-      : {
-          cart_products: carts,
-          shipping_address_id: selectedShipping,
-          billing_address_id: selectedBilling,
-          shipping_method_id: parseInt(selectedRule),
-          coupon: couponCode && couponCode.code,
-        };
+ const shippingPayload = shippingFromApi
+  ? {
+      shipping: {
+        courier: shippingFromApi.code,
+        courier_name: shippingFromApi.name,
+        service: shippingFromApi.service,
+        cost: Number(shippingFromApi.cost),
+        etd: shippingFromApi.etd,
+      },
+    }
+  : {};
+
+const basePayload = isGuest
+  ? {
+      address: buildGuestAddressObject(),
+      cart_products: carts,
+      shipping_method_id: parseInt(selectedRule),
+      coupon: couponCode && couponCode.code,
+      ...shippingPayload,
+    }
+  : {
+      cart_products: carts,
+      shipping_address_id: selectedShipping,
+      billing_address_id: selectedBilling,
+      shipping_method_id: parseInt(selectedRule),
+      coupon: couponCode && couponCode.code,
+      ...shippingPayload,
+    };
+
 
     const routes = {
       cashOnDelivery: () =>
@@ -386,8 +404,8 @@ export default function usePlaceOrder({
       }
     }
 
-    if (!selectedRule)
-      return toast.error(ServeLangItem()?.Please_Select_Shipping_Rule);
+    if (!shippingFromApi)
+  return toast.error("Please select shipping courier");
 
     if (!selectPayment)
       return toast.error(ServeLangItem()?.Please_Select_Your_Payment_Method);

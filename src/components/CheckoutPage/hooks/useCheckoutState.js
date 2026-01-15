@@ -36,6 +36,9 @@ export const useCheckoutState = () => {
   const [shippingCharge, setShippingCharge] = useState(null);
   const [locationShippingPrice, setLocationShippingPrice] = useState(null);
 
+  // 🔥 ONGKIR API
+const [shippingFromApi, setShippingFromApi] = useState(null);
+
   // Payment method state
   const [selectPayment, setPaymentMethod] = useState(null);
 
@@ -157,6 +160,9 @@ export const useCheckoutState = () => {
     // Payment state
     selectPayment,
     setPaymentMethod,
+      // 🔥 ONGKIR API
+  shippingFromApi,
+  setShippingFromApi,
 
     // Stripe state
     stripeData,

@@ -24,7 +24,7 @@ const MapComponent = dynamic(() => import("@/components/MapComponent/Index"), {
   ssr: false,
 });
 
-const CheckoutAddressForm = ({ onAddressSaved, onCancel }) => {
+const CheckoutAddressForm = ({ onAddressSaved, onCancel, setShippingFromApi }) => {
   // Get website settings for map configuration
   const webSettings = settings();
  const [ongkir, setOngkir] = useState(null); 
@@ -717,17 +717,29 @@ const selectZipCode = (value) => {
                 selectedShipping?.code === item.code &&
                 selectedShipping?.service === item.service
               }
-              onChange={() => {
-                setSelectedShipping(item);
-                setFormData(prev => ({
-                  ...prev,
-                  shipping_code: item.code,
-                  shipping_service: item.service,
-                  shipping_cost: item.cost,
-                  etd: item.etd,
-                }));
-                setShowShippingModal(false);
-              }}
+            onChange={() => {
+  setSelectedShipping(item);
+
+  // 🔥 KIRIM KE CHECKOUT PAGE
+  setShippingFromApi({
+    name: item.name,
+    code: item.code,
+    service: item.service,
+    cost: item.cost,
+    etd: item.etd,
+  });
+
+  setFormData(prev => ({
+    ...prev,
+    shipping_code: item.code,
+    shipping_service: item.service,
+    shipping_cost: item.cost,
+    etd: item.etd,
+  }));
+
+  setShowShippingModal(false);
+}}
+
             />
 
             <div>

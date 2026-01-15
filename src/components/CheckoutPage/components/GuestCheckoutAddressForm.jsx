@@ -14,10 +14,9 @@ import auth from "@/utils/auth";
 import settings from "@/utils/settings";
 import {
   useLazyGetShippingDestinationsQuery,
-  useLazyGetShippingCostByZipQuery,
+  useLazyCekOngkirQuery,
 } from "@/redux/features/shipping/apiSlice";
-
-
+import { useDispatch } from "react-redux";
 function GuestCheckoutAddressForm({
   fName,
   setFName,
@@ -42,8 +41,8 @@ function GuestCheckoutAddressForm({
   guestLocation,
   setGuestLocation,
   errors,
+   setShippingFromApi
   // this method works for shipping rule
-  shippingHandler,
 }) {
   const webSettings = settings();
 
@@ -51,6 +50,20 @@ function GuestCheckoutAddressForm({
   const [countryDropdown, setCountryDropdown] = useState([]);
   const [stateDropdown, setStateDropdown] = useState(null);
   const [cityDropdown, setCityDropdown] = useState(null);
+
+  const [cityId, setCityId] = useState(null);
+const [allZipData, setAllZipData] = useState([]);
+
+const [districtDropdown, setDistrictDropdown] = useState([]);
+const [districtId, setDistrictId] = useState(null);
+const dispatch = useDispatch();
+
+const [zipDropdown, setZipDropdown] = useState([]);
+const [selectedDistrict, setSelectedDistrict] = useState(null);
+const [shippingCost, setShippingCost] = useState(null);
+const [shippingOptions, setShippingOptions] = useState([]);
+const [selectedShipping, setSelectedShipping] = useState(null);
+const [showShippingModal, setShowShippingModal] = useState(false);
 
   // Initialization location hooks REDUX RTK QUERY
   const [getCountryListGuestApi] = useLazyGetCountryListGuestApiQuery();
@@ -134,29 +147,51 @@ const [cekOngkir] = useLazyCekOngkirQuery();
    * Handler for city selection
    * @param {Object} value - Selected city object with id
    */
+
 const selectCity = async (value) => {
   if (!value?.id) return;
 
-  setCity(value.id);
-  shippingHandler(false, value.id);
+  setCity(value.id); // update city state
+  setSelectedDistrict(null);
+  setDestinationDropdown([]);
 
-  const res = await getShippingDestinations(value.id);
-  if (res?.data) {
-    setDestinationDropdown(res.data); 
-    // expected: [{ kelurahan, zip_code }]
+  try {
+    const res = await getShippingDestinations(value.id).unwrap();
+    setDistrictDropdown(res.data || []);
+  } catch (err) {
+    console.error("Gagal ambil kelurahan:", err);
   }
 };
-const handleSelectZip = async (value) => {
-  if (!value?.zip_code) return;
 
-  setSelectedZip(value.zip_code);
+const selectDistrict = async (value) => {
+  if (!value?.postal_code) return;
 
-  const res = await cekOngkir(value.zip_code);
+  setSelectedDistrict(value);
+  setAddress(prev => ({
+    ...prev,
+    district: value.name,
+    zip_code: value.postal_code,
+  }));
 
-  if (res?.data) {
-    // kirim ke parent / update summary ongkir
-    console.log("ONGKIR:", res.data);
+  try {
+    const res = await cekOngkir(value.postal_code).unwrap();
+    setShippingOptions(res.data || []);
+    setShowShippingModal(true);
+  } catch (err) {
+    console.error("Gagal cek ongkir:", err);
   }
+};
+
+const selectZipCode = (value) => {
+  if (!value?.postal_code) return;
+
+  setSelectedZip(value.postal_code);
+
+  setFormData(prev => ({
+    ...prev,
+    zip_code: value.postal_code,
+    subdistrict: value.name
+  }));
 };
 
   return (
@@ -345,33 +380,46 @@ const handleSelectZip = async (value) => {
             )}
           </div>
         </div>
-        {destinationDropdown.length > 0 && (
-  <div className="mb-6">
-    <h1 className="input-label mb-2">
-      Kelurahan / Kode Pos *
-    </h1>
+        {districtDropdown.length > 0 && (
+  <div className="flex space-x-5 mb-6">
 
-    <div className="w-full h-[50px] border flex items-center">
-      <Selectbox
-        action={handleSelectZip}
-        className="w-full px-5"
-        defaultValue="Pilih Kelurahan"
-        datas={destinationDropdown}
-      >
-        {({ item }) => (
-          <div className="flex justify-between w-full">
-            <span className="text-[13px] text-qblack">
-              {item.kelurahan}
-            </span>
-            <span className="text-[12px] text-qgray">
-              {item.zip_code}
-            </span>
-          </div>
-        )}
-      </Selectbox>
+    {/* KELURAHAN */}
+    <div className="w-1/2">
+      <h1 className="input-label mb-2">Kelurahan*</h1>
+      <div className="w-full h-[50px] border flex items-center border-qgray-border">
+        <Selectbox
+          action={selectDistrict}
+          className="w-full px-5"
+          datas={districtDropdown}
+        >
+          {({ item }) => (
+            <div className="flex justify-between w-full">
+              <span>{item.name}</span>
+              <ArrowDownIcoCheck />
+            </div>
+          )}
+        </Selectbox>
+      </div>
     </div>
+
+    {/* KODE POS */}
+    <div className="w-1/2">
+      <h1 className="input-label mb-2">Kode Pos*</h1>
+      <div className="w-full h-[50px] border flex items-center border-qgray-border bg-gray-50">
+        <InputCom
+          placeholder="-"
+          value={selectedDistrict?.postal_code || ""}
+          readOnly
+          inputHandler={() => {}}
+          inputClasses="w-full h-full bg-transparent"
+        />
+      </div>
+    </div>
+
   </div>
 )}
+
+
 
         <div className=" mb-6">
           <div>
@@ -431,7 +479,79 @@ const handleSelectZip = async (value) => {
             </label>
           </div>
         </div>
+</div>
+
+      {/* ================= SHIPPING MODAL ================= */}
+{showShippingModal && (
+  <div className="fixed inset-0 bg-black/40 z-[9999] flex items-end">
+    <div className="bg-white w-full rounded-t-xl max-h-[70vh] overflow-y-auto p-4">
+
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">Pilih Pengiriman</h2>
+        <button
+          onClick={() => setShowShippingModal(false)}
+          className="text-xl"
+        >
+          ✕
+        </button>
       </div>
+
+      {shippingOptions.length === 0 && (
+        <p className="text-center text-gray-500">
+          Ongkir tidak tersedia
+        </p>
+      )}
+
+      {shippingOptions.map((item, index) => (
+        <label
+          key={index}
+          className="flex justify-between items-center py-3 border-b cursor-pointer"
+        >
+          <div className="flex gap-3 items-center">
+            <input
+              type="radio"
+              name="shipping"
+              checked={
+                selectedShipping?.code === item.code &&
+                selectedShipping?.service === item.service
+              }
+ onChange={() => {
+  setSelectedShipping(item);
+
+  // 🔥 update parent
+  setShippingFromApi({
+    name: item.name,
+    code: item.code,
+    service: item.service,
+    cost: item.cost,
+    etd: item.etd,
+  });
+
+  setShowShippingModal(false);
+}}
+
+            />
+
+            <div>
+              <p className="font-medium">
+                {item.name} ({item.service})
+              </p>
+              <p className="text-sm text-gray-500">
+                {item.description} • {item.etd || "-"} hari
+              </p>
+            </div>
+          </div>
+
+          <div className="font-semibold">
+            Rp{item.cost?.toLocaleString("id-ID")}
+          </div>
+        </label>
+      ))}
+    </div>
+  </div>
+)}
+{/* ================= END SHIPPING MODAL ================= */}
+
     </div>
   );
 }
