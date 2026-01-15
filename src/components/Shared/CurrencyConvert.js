@@ -1,4 +1,4 @@
-function CurrencyConvert({ price }) {
+function CurrencyConvert({ price, disableConvert = false }) {
   // kalau tidak ada harga
   const storedCurrency = localStorage.getItem("shopoDefaultCurrency");
   const getDefaultCurrency = storedCurrency
@@ -13,9 +13,9 @@ function CurrencyConvert({ price }) {
 
   // ubah price & rate ke number murni
   const priceNumber = parseFloat(price) || 0;
-  const rate = getDefaultCurrency
-    ? parseFloat(getDefaultCurrency.currency_rate) || 1
-    : 1;
+  const rate = disableConvert 
+    ? 1 
+    : (getDefaultCurrency ? parseFloat(getDefaultCurrency.currency_rate) || 1 : 1);
 
   const priceConverted = priceNumber * rate;
 

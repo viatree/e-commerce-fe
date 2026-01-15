@@ -17,6 +17,7 @@ import {
   useLazyCekOngkirQuery,
 } from "@/redux/features/shipping/apiSlice";
 import { useDispatch } from "react-redux";
+import { revertToPriceBase } from "@/utils/currency"; // Sesuaikan path-nya
 function GuestCheckoutAddressForm({
   fName,
   setFName,
@@ -515,43 +516,39 @@ const selectZipCode = (value) => {
                 selectedShipping?.code === item.code &&
                 selectedShipping?.service === item.service
               }
- onChange={() => {
-  setSelectedShipping(item);
+              onChange={() => {
+                setSelectedShipping(item);
 
-  // 🔥 update parent
-  setShippingFromApi({
-    name: item.name,
-    code: item.code,
-    service: item.service,
-    cost: item.cost,
-    etd: item.etd,
-  });
+                // 🔥 update parent
+                setShippingFromApi({
+                  name: item.name,
+                  code: item.code,
+                  service: item.service,
+                  cost: revertToPriceBase(item.cost),
+                  etd: item.etd,
+                });
 
-  setShowShippingModal(false);
-}}
-
+                setShowShippingModal(false);
+              }}
             />
-
-            <div>
-              <p className="font-medium">
-                {item.name} ({item.service})
-              </p>
-              <p className="text-sm text-gray-500">
-                {item.description} • {item.etd || "-"} hari
-              </p>
-            </div>
-          </div>
-
-          <div className="font-semibold">
-            Rp{item.cost?.toLocaleString("id-ID")}
-          </div>
-        </label>
-      ))}
-    </div>
-  </div>
-)}
-{/* ================= END SHIPPING MODAL ================= */}
-
+                <div>
+                  <p className="font-medium">
+                    {item.name} ({item.service})
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {item.description} • {item.etd || "-"} hari
+                  </p>
+                </div>
+              </div>
+              <div className="font-semibold">
+                Rp{item.cost?.toLocaleString("id-ID")}
+              </div>
+            </label>
+          ))}
+        </div>
+      </div>
+    )}
+    {/* ================= END SHIPPING MODAL ================= */}
     </div>
   );
 }

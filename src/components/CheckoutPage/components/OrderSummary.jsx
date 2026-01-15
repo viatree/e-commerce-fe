@@ -12,7 +12,7 @@ const OrderSummary = ({
   totalPrice,
   discountCoupon,
   mainTotalPrice,
-    shippingFromApi,
+  shippingFromApi,
   // Shipping data
   shippingRulesByCityId,
   selectedRule,
