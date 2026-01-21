@@ -5,7 +5,7 @@ import LoaderStyleOne from "@/components/Helpers/Loaders/LoaderStyleOne";
 import InputCom from "@/components/Helpers/InputCom";
 import Sslcommerce from "@/components/Helpers/icons/Sslcommerce";
 import Bkash from "@/components/Helpers/icons/Bkash";
-import StripeLogo from "@/components/Helpers/icons/StripeLogo";
+// import StripeLogo from "@/components/Helpers/icons/StripeLogo";
 import FlutterWaveLogo from "@/components/Helpers/icons/FlutterWaveLogo";
 import FatoorahLogo from "@/components/Helpers/icons/FatoorahLogo";
 import InstamojoLogo from "@/components/Helpers/icons/InstamojoLogo";
@@ -20,9 +20,9 @@ const PaymentMethods = ({
   setPaymentMethod,
   paymentStatuses,
 
-  // Stripe data
-  stripeData,
-  updateStripeData,
+  // // Stripe data
+  // stripeData,
+  // updateStripeData,
 
   // Bank data
   bankInfo,
@@ -45,33 +45,33 @@ const PaymentMethods = ({
    * @param {string} field - Field name
    * @param {Event} event - Input change event
    */
-  const handleStripeFieldChange = (field, event) => {
-    if (field === "expireDate") {
-      updateStripeData(field, formatExpirationDate(event));
-    } else {
-      updateStripeData(field, event.target.value);
-    }
-  };
+  // const handleStripeFieldChange = (field, event) => {
+  //   if (field === "expireDate") {
+  //     updateStripeData(field, formatExpirationDate(event));
+  //   } else {
+  //     updateStripeData(field, event.target.value);
+  //   }
+  // };
 
   /**
    * Check if field has stripe error
    * @param {string} fieldName - Field name to check
    * @returns {boolean} Whether field has error
    */
-  const hasStripeError = (fieldName) => {
-    return !!(stripeData.error && Object.hasOwn(stripeData.error, fieldName));
-  };
+  // const hasStripeError = (fieldName) => {
+  //   return !!(stripeData.error && Object.hasOwn(stripeData.error, fieldName));
+  // };
 
   /**
    * Get stripe error message for field
    * @param {string} fieldName - Field name to get error for
    * @returns {string} Error message
    */
-  const getStripeErrorMessage = (fieldName) => {
-    return stripeData.error && Object.hasOwn(stripeData.error, fieldName)
-      ? stripeData.error[fieldName][0]
-      : "";
-  };
+  // const getStripeErrorMessage = (fieldName) => {
+  //   return stripeData.error && Object.hasOwn(stripeData.error, fieldName)
+  //     ? stripeData.error[fieldName][0]
+  //     : "";
+  // };
 
   /**
    * Render payment method button
@@ -124,69 +124,69 @@ const PaymentMethods = ({
             paymentStatuses.cash_on_delivery_status
           )}
 
-          {/* Stripe */}
+          {/* Stripe
           {renderPaymentMethod(
             "stripe",
             null,
             paymentStatuses.stripePaymentInfo,
             <StripeLogo />
-          )}
+          )} */}
 
           {/* RazorPay */}
-          {renderPaymentMethod(
+          {/* {renderPaymentMethod(
             "razorpay",
             null,
             paymentStatuses.razorpayPaymentInfo,
             <RezorPayLogo />
-          )}
+          )} */}
 
           {/* FlutterWave */}
-          {renderPaymentMethod(
+          {/* {renderPaymentMethod(
             "flutterWave",
             null,
             paymentStatuses.flutterwavePaymentInfo,
             <FlutterWaveLogo />
-          )}
+          )} */}
 
           {/* Mollie */}
-          {renderPaymentMethod(
+          {/* {renderPaymentMethod(
             "mollie",
             null,
             paymentStatuses.mollie,
             <div className="text-qblack font-bold text-base">Mollie</div>
-          )}
+          )} */}
 
           {/* MyFatoorah */}
-          {renderPaymentMethod(
+          {/* {renderPaymentMethod(
             "myfatoorah",
             null,
             paymentStatuses.myfatoorah,
             <FatoorahLogo />
-          )}
+          )} */}
 
           {/* Instamojo */}
-          {renderPaymentMethod(
+          {/* {renderPaymentMethod(
             "instamojo",
             null,
             paymentStatuses.instamojo,
             <InstamojoLogo />
-          )}
+          )} */}
 
           {/* Paystack */}
-          {renderPaymentMethod(
+          {/* {renderPaymentMethod(
             "paystack",
             null,
             paymentStatuses.paystackAndMollie,
             <PaystackLogo />
-          )}
+          )} */}
 
           {/* PayPal */}
-          {renderPaymentMethod(
+          {/* {renderPaymentMethod(
             "paypal",
             null,
             paymentStatuses.paypalPaymentInfo,
             <PaypalLogo />
-          )}
+          )} */}
 
           {/* Bank Payment */}
           {renderPaymentMethod(

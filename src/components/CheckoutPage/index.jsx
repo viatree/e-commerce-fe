@@ -37,11 +37,10 @@ import CheckoutAddressForm from "./components/CheckoutAddressForm";
 import GuestCheckoutAddressForm from "./components/GuestCheckoutAddressForm";
 
 export default function CheckoutPage() {
-  
   // Redux selectors
   const { websiteSetup } = useSelector((state) => state.websiteSetup);
   const { cart } = useSelector((state) => state.cart);
-  
+
   // Router and dispatch
   const router = useRouter();
   const dispatch = useDispatch();
@@ -117,10 +116,10 @@ export default function CheckoutPage() {
     selectPayment,
     setPaymentMethod,
 
-    // Stripe state
-    stripeData,
-    setStripeData,
-    updateStripeData,
+    // // Stripe state
+    // stripeData,
+    // setStripeData,
+    // updateStripeData,
 
     // Coupon state
     couponData,
@@ -137,9 +136,9 @@ export default function CheckoutPage() {
     paymentStatuses,
     setPaymentStatuses,
     updatePaymentStatuses,
-  // 🔥 ONGKIR API
-  shippingFromApi,
-  setShippingFromApi,
+    // 🔥 ONGKIR API
+    shippingFromApi,
+    setShippingFromApi,
   } = useCheckoutState();
 
   // Calculate total price from subtotal
@@ -149,7 +148,7 @@ export default function CheckoutPage() {
   const { data: addressesData, refetch: refetchAddresses } =
     useGetAllUserAddressQueryQuery(
       { token: auth()?.access_token },
-      { skip: !auth() }
+      { skip: !auth() },
     );
 
   /**
@@ -180,7 +179,7 @@ export default function CheckoutPage() {
           updateCouponData("couponCode", res.data.coupon);
           localStorage.setItem(
             "coupon",
-            JSON.stringify(res.data && res.data.coupon)
+            JSON.stringify(res.data && res.data.coupon),
           );
           let currDate = new Date().toLocaleDateString();
           localStorage.setItem("coupon_set_date", currDate);
@@ -216,7 +215,7 @@ export default function CheckoutPage() {
 
       if (Number(webSettings?.map_status) === 1) {
         const findAddress = addresses?.find(
-          (f) => parseInt(f.id) === addressId
+          (f) => parseInt(f.id) === addressId,
         );
         const calcPrice = calculateLocationShippingPrice(findAddress);
         setLocationShippingPrice(calcPrice);
@@ -303,20 +302,20 @@ export default function CheckoutPage() {
       errors,
       setErrors,
     },
-    stripeFields: {
-      cardNumber: stripeData.cardNumber,
-      cardHolderName: stripeData.cardHolderName,
-      expireDate: stripeData.expireDate,
-      cvv: stripeData.cvv,
-    },
-    setStripeError: (error) => updateStripeData("error", error),
-    resetStripeInputs: () => {
-      updateStripeData("cardHolderName", "");
-      updateStripeData("expireDate", null);
-      updateStripeData("cvv", "");
-      updateStripeData("cardNumber", "");
-      setPaymentMethod("");
-    },
+    // stripeFields: {
+    //   cardNumber: stripeData.cardNumber,
+    //   cardHolderName: stripeData.cardHolderName,
+    //   expireDate: stripeData.expireDate,
+    //   cvv: stripeData.cvv,
+    // },
+    // setStripeError: (error) => updateStripeData("error", error),
+    // resetStripeInputs: () => {
+    //   updateStripeData("cardHolderName", "");
+    //   updateStripeData("expireDate", null);
+    //   updateStripeData("cvv", "");
+    //   updateStripeData("cardNumber", "");
+    //   setPaymentMethod("");
+    // },
     setNewAddress: () => setActiveAddress("shipping"),
     ServeLangItem,
   });
@@ -372,7 +371,7 @@ export default function CheckoutPage() {
         v.variants.map(
           (item) =>
             item.variant_item &&
-            prices.push(parseFloat(item.variant_item.price))
+            prices.push(parseFloat(item.variant_item.price)),
         );
         const sumCal = prices.length > 0 && prices.reduce((p, c) => p + c);
 
@@ -382,14 +381,14 @@ export default function CheckoutPage() {
             const checkFlshPrdct = checkProductExistsInFlashSale(
               v.product_id,
               v_price,
-              websiteSetup
+              websiteSetup,
             );
             return checkFlshPrdct * v.qty;
           } else {
             const wo_v_price = checkProductExistsInFlashSale(
               v.product_id,
               parseFloat(v.product.offer_price),
-              websiteSetup
+              websiteSetup,
             );
             return wo_v_price * v.qty;
           }
@@ -399,14 +398,14 @@ export default function CheckoutPage() {
             const checkFlshPrdct = checkProductExistsInFlashSale(
               v.product_id,
               v_price,
-              websiteSetup
+              websiteSetup,
             );
             return checkFlshPrdct * v.qty;
           } else {
             const wo_v_price = checkProductExistsInFlashSale(
               v.product_id,
               parseFloat(v.product.price),
-              websiteSetup
+              websiteSetup,
             );
             return wo_v_price * v.qty;
           }
@@ -421,25 +420,31 @@ export default function CheckoutPage() {
     if (couponData.couponCode) {
       const discountAmount = calculateDiscountAmount(
         couponData.couponCode,
-        totalPrice
+        totalPrice,
       );
       updateCouponData("discountCoupon", discountAmount);
     }
   }, [couponData.couponCode, totalPrice]);
 
   // Calculate main total price when shipping changes
-useEffect(() => {
-  if (shippingFromApi?.cost) {
-    setMainTotalPrice(Number(totalPrice) + Number(shippingFromApi.cost));
-  } else {
-    setMainTotalPrice(totalPrice);
+  useEffect(() => {
+    if (shippingFromApi?.cost) {
+      setMainTotalPrice(Number(totalPrice) + Number(shippingFromApi.cost));
+    } else {
+      setMainTotalPrice(totalPrice);
+    }
+  }, [shippingFromApi, totalPrice]);
+
+  useEffect(() => {
+  if (!shippingFromApi) {
+    setShippingFromApi({ cost: 0 });
   }
-}, [shippingFromApi, totalPrice]);
+}, []);
 
-useEffect(() => {
-  console.log("ONGKIR:", shippingFromApi);
-}, [shippingFromApi]);
 
+  useEffect(() => {
+    console.log("ONGKIR:", shippingFromApi);
+  }, [shippingFromApi]);
 
   // Initialize shipping when addresses and rules are available
   useEffect(() => {
@@ -451,7 +456,7 @@ useEffect(() => {
     ) {
       shippingHandler(
         parseInt(addresses[0].id),
-        parseInt(addresses[0].city_id)
+        parseInt(addresses[0].city_id),
       );
     }
   }, [shippingRules, addresses]);
@@ -482,16 +487,16 @@ useEffect(() => {
      * use updatePaymentStatuses to set payment statuses
      */
     const getWays = [
-      "sslcommerz",
-      "paypalPaymentInfo",
-      "mollie",
-      "paystackAndMollie",
-      "instamojo",
-      "myfatoorah",
-      "flutterwavePaymentInfo",
-      "razorpayPaymentInfo",
-      "stripePaymentInfo",
-      "bkash",
+      // "sslcommerz",
+      // "paypalPaymentInfo",
+      // "mollie",
+      // "paystackAndMollie",
+      // "instamojo",
+      // "myfatoorah",
+      // "flutterwavePaymentInfo",
+      // "razorpayPaymentInfo",
+      // "stripePaymentInfo",
+      // "bkash",
       "cash_on_delivery_status",
       "bankPaymentInfo",
     ];
@@ -537,7 +542,7 @@ useEffect(() => {
       // Calculate location shipping price if map is enabled
       if (Number(webSettings?.map_status) === 1) {
         setLocationShippingPrice(
-          calculateLocationShippingPrice(response.data.addresses[0])
+          calculateLocationShippingPrice(response.data.addresses[0]),
         );
       }
     }
@@ -614,7 +619,7 @@ useEffect(() => {
         {/* Main Checkout Content */}
         <div className="checkout-main-content w-full">
           <div className="container-x mx-auto">
-            {!isGetCheckoutDataLoading || !isGetGuestCheckoutDataLoading ? (
+            {!isGetCheckoutDataLoading && !isGetGuestCheckoutDataLoading ? (
               <div className="w-full lg:flex lg:space-x-[30px] rtl:space-x-reverse">
                 {/* Left Column - Address Section */}
                 <div className="lg:w-4/6 w-full">
@@ -625,8 +630,8 @@ useEffect(() => {
                   {auth() ? (
                     <AddressTabs
                       addresses={addresses}
-                       shippingFromApi={shippingFromApi}
-  setShippingFromApi={setShippingFromApi}
+                      shippingFromApi={shippingFromApi}
+                      setShippingFromApi={setShippingFromApi}
                       activeAddress={activeAddress}
                       selectedBilling={selectedBilling}
                       selectedShipping={selectedShipping}
@@ -638,14 +643,12 @@ useEffect(() => {
                       onAddressRefresh={handleAddressRefresh}
                     />
                   ) : (
-                  <GuestCheckoutAddressForm
-  {...guestCheckoutAddressProps}
-    shippingHandler={shippingHandler}
-  shippingFromApi={shippingFromApi}
-  setShippingFromApi={setShippingFromApi}
-  
-/>
-                    
+                    <GuestCheckoutAddressForm
+                      {...guestCheckoutAddressProps}
+                      shippingHandler={shippingHandler}
+                      shippingFromApi={shippingFromApi}
+                      setShippingFromApi={setShippingFromApi}
+                    />
                   )}
                 </div>
 
@@ -679,16 +682,15 @@ useEffect(() => {
                     price={price}
                     totalWeight={totalWeight}
                     totalQty={totalQty}
-                      shippingFromApi={shippingFromApi} 
+                    shippingFromApi={shippingFromApi}
                   />
-
                   {/* Payment Methods */}
                   <PaymentMethods
                     selectPayment={selectPayment}
                     setPaymentMethod={setPaymentMethod}
                     paymentStatuses={paymentStatuses}
-                    stripeData={stripeData}
-                    updateStripeData={updateStripeData}
+                    // stripeData={stripeData}
+                    // updateStripeData={updateStripeData}
                     bankInfo={bankInfo}
                     transactionInfo={transactionInfo}
                     setTransactionInfo={setTransactionInfo}

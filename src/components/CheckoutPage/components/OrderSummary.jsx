@@ -179,25 +179,25 @@ const OrderSummary = ({
       </div>
 
       {/* Shipping Section */}
-<div className="shipping mb-6 mt-6">
-  <span className="text-[15px] font-medium text-qblack mb-[18px] block">
-    Shipping (+)
-  </span>
+      <div className="shipping mb-6 mt-6">
+        <span className="text-[15px] font-medium text-qblack mb-[18px] block">
+          Shipping (+)
+        </span>
 
-  {shippingFromApi ? (
-    <div className="flex justify-between">
-      <span>
-        {shippingFromApi.name} - {shippingFromApi.service} ({shippingFromApi.etd} hari)
-      </span>
-      <span>
-        <CurrencyConvert price={shippingFromApi.cost} />
-      </span>
-    </div>
-  ) : (
-    <p className="text-sm text-gray-400">Please select shipping</p>
-  )}
-</div>
-
+        {shippingFromApi ? (
+          <div className="flex justify-between">
+            <span>
+              {shippingFromApi.name} - {shippingFromApi.service} (
+              {shippingFromApi.etd} hari)
+            </span>
+            <span>
+              <CurrencyConvert price={shippingFromApi.cost} />
+            </span>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-400">Please select shipping</p>
+        )}
+      </div>
 
       {/* Total */}
       <div className="mt-[30px]">
